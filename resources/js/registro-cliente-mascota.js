@@ -52,5 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
         salida.textContent = `Edad aproximada: ${partes.join(' y ')}`;
     };
 
+    // Muestra la foto elegida antes de guardar
+    const mostrarFoto = (inputFoto) => {
+        const vista = inputFoto.closest('[data-mascota]').querySelector('[data-vista-foto]');
+        const archivo = inputFoto.files[0];
+
+        if (!archivo) {
+            vista.textContent = 'Sin foto';
+            return;
+        }
+
+        const imagen = document.createElement('img');
+        imagen.src = URL.createObjectURL(archivo);
+        imagen.alt = 'Foto de la mascota';
+        imagen.className = 'h-full w-full object-cover';
+        vista.replaceChildren(imagen);
+    };
    
 });
