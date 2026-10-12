@@ -54,6 +54,65 @@
                 @enderror
             </div>
 
-        
+            <div>
+                <label for="{{ $prefijo }}-raza" class="etiqueta">Raza</label>
+                <select id="{{ $prefijo }}-raza" name="mascotas[{{ $indice }}][raza_id]"
+                    class="campo disabled:bg-gray-100 disabled:text-gray-400" data-raza @disabled(empty($razas))>
+                    <option value="">{{ empty($razas) ? 'Primero elige la especie' : 'Selecciona una raza' }}</option>
+                    @foreach ($razas as $raza)
+                        <option value="{{ $raza['id'] }}" @selected(old("mascotas.$indice.raza_id") == $raza['id'])>
+                            {{ $raza['nombre'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label for="{{ $prefijo }}-sexo" class="etiqueta">Sexo <span class="text-red-500">*</span></label>
+                <select id="{{ $prefijo }}-sexo" name="mascotas[{{ $indice }}][sexo]" required class="campo">
+                    <option value="">Selecciona</option>
+                    <option value="macho" @selected(old("mascotas.$indice.sexo") === 'macho')>Macho</option>
+                    <option value="hembra" @selected(old("mascotas.$indice.sexo") === 'hembra')>Hembra</option>
+                </select>
+                @error("mascotas.$indice.sexo")
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label for="{{ $prefijo }}-fecha" class="etiqueta">Fecha de nacimiento</label>
+                <input id="{{ $prefijo }}-fecha" name="mascotas[{{ $indice }}][fecha_nacimiento]" type="date"
+                    max="{{ date('Y-m-d') }}" class="campo" data-fecha-nacimiento
+                    value="{{ old("mascotas.$indice.fecha_nacimiento") }}">
+                <p class="mt-1 text-xs text-gray-500" data-edad>Si no la conoce, use una fecha aproximada.</p>
+            </div>
+
+            <div>
+                <label for="{{ $prefijo }}-color" class="etiqueta">Color</label>
+                <input id="{{ $prefijo }}-color" name="mascotas[{{ $indice }}][color]" type="text"
+                    maxlength="100" placeholder="Ej. Café con blanco" class="campo"
+                    value="{{ old("mascotas.$indice.color") }}">
+            </div>
+
+            <div>
+                <label for="{{ $prefijo }}-microchip" class="etiqueta">Microchip</label>
+                <input id="{{ $prefijo }}-microchip" name="mascotas[{{ $indice }}][microchip]" type="text"
+                    maxlength="50" placeholder="Opcional" class="campo"
+                    value="{{ old("mascotas.$indice.microchip") }}">
+                @error("mascotas.$indice.microchip")
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex items-end">
+                <label class="flex items-center gap-2 pb-2 text-sm text-gray-700">
+                    <input type="hidden" name="mascotas[{{ $indice }}][esterilizado]" value="0">
+                    <input type="checkbox" name="mascotas[{{ $indice }}][esterilizado]" value="1"
+                        class="h-4 w-4 rounded border-gray-300 accent-primario-600"
+                        @checked(old("mascotas.$indice.esterilizado"))>
+                    Esterilizado(a)
+                </label>
+            </div>
+        </div>
     </div>
 </div>
