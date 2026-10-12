@@ -68,5 +68,49 @@ document.addEventListener('DOMContentLoaded', () => {
         imagen.className = 'h-full w-full object-cover';
         vista.replaceChildren(imagen);
     };
+
+    // Numera las mascotas y oculta "Quitar" si solo hay una
+    const actualizarTarjetas = () => {
+        const tarjetas = lista.querySelectorAll('[data-mascota]');
+
+        tarjetas.forEach((tarjeta, posicion) => {
+            tarjeta.querySelector('[data-titulo-mascota]').textContent = `Mascota ${posicion + 1}`;
+            tarjeta.querySelector('[data-quitar-mascota]').classList.toggle('hidden', tarjetas.length === 1);
+        });
+    };
+
+    // Agregar otra mascota
+    botonAgregar.addEventListener('click', () => {
+        const html = plantilla.innerHTML.replaceAll('__INDICE__', siguienteIndice);
+        siguienteIndice++;
+
+        lista.insertAdjacentHTML('beforeend', html);
+        actualizarTarjetas();
+        lista.lastElementChild.querySelector('input[type="text"]')?.focus();
+    });
+
+    // Cambios dentro de cualquier mascota
+    lista.addEventListener('change', (evento) => {
+        const campo = evento.target;
+
+        if (campo.matches('[data-especie]')) cargarRazas(campo);
+        if (campo.matches('[data-fecha-nacimiento]')) calcularEdad(campo);
+        if (campo.matches('[data-foto]')) mostrarFoto(campo);
+    });
+
+    // Quitar una mascota
+    lista.addEventListener('click', (evento) => {
+        const boton = evento.target.closest('[data-quitar-mascota]');
+        if (!boton) return;
+
+        boton.closest('[data-mascota]').remove();
+        actualizarTarjetas();
+    });
+
+    // Estado inicial
+    lista.querySelectorAll('[data-fecha-nacimiento]').forEach((input) => {
+        if (input.value) calcularEdad(input);
+    });
+    actualizarTarjetas();
    
 });
