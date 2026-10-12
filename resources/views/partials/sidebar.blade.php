@@ -14,7 +14,7 @@
             ['texto' => 'Reportes', 'url' => '#', 'ruta' => 'reportes*'],
         ],
         'Administración' => [
-            ['texto' => 'Usuarios', 'url' => '#', 'ruta' => 'usuarios*'],
+            ['texto' => 'Usuarios', 'url' => route('usuarios.index'), 'ruta' => 'usuarios*'],
             ['texto' => 'Auditoría', 'url' => '#', 'ruta' => 'auditoria*'],
         ],
     ];
