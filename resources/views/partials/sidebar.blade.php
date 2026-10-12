@@ -5,7 +5,7 @@
             ['texto' => 'Citas', 'url' => '#', 'ruta' => 'citas*'],
         ],
         'Atención' => [
-            ['texto' => 'Clientes y mascotas', 'url' => '#', 'ruta' => 'clientes*'],
+            ['texto' => 'Clientes y mascotas', 'url' => route('clientes.registro'), 'ruta' => 'clientes*'],
             ['texto' => 'Expedientes', 'url' => '#', 'ruta' => 'expedientes*'],
         ],
         'Negocio' => [
