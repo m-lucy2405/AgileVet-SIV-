@@ -22,8 +22,11 @@
             {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
         </span>
 
-        <button type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
-            Salir
-        </button>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+                Salir
+            </button>
+        </form>
     </div>
 </header>

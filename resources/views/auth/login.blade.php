@@ -14,7 +14,7 @@
             <h1 class="text-center text-xl font-semibold text-gray-800">Agro-Veterinaria La Mascota</h1>
             <p class="mt-1 text-center text-sm text-gray-500">Ingresa tus credenciales para continuar</p>
 
-            <form method="POST" action="#" class="mt-8 space-y-5">
+            <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
                 @csrf
 
                 <div>
