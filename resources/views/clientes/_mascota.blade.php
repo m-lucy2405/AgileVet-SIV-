@@ -1,6 +1,4 @@
 @php
-    $especieElegida = old("mascotas.$indice.especie");
-    $razas = $razasPorEspecie[$especieElegida] ?? [];
     $prefijo = "mascota-$indice";
 @endphp
 
@@ -32,7 +30,7 @@
                 required class="campo" data-especie>
                 <option value="">Selecciona</option>
                 @foreach ($especies as $especie)
-                    <option value="{{ $especie }}" @selected($especieElegida === $especie)>{{ $especie }}</option>
+                    <option value="{{ $especie }}" @selected(old("mascotas.$indice.especie") === $especie)>{{ $especie }}</option>
                 @endforeach
             </select>
             @error("mascotas.$indice.especie")
@@ -42,15 +40,14 @@
 
             <div>
                 <label for="{{ $prefijo }}-raza" class="etiqueta">Raza</label>
-                <select id="{{ $prefijo }}-raza" name="mascotas[{{ $indice }}][raza_id]"
-                    class="campo disabled:bg-gray-100 disabled:text-gray-400" data-raza @disabled(empty($razas))>
-                    <option value="">{{ empty($razas) ? 'Primero elige la especie' : 'Selecciona una raza' }}</option>
-                    @foreach ($razas as $raza)
-                        <option value="{{ $raza['id'] }}" @selected(old("mascotas.$indice.raza_id") == $raza['id'])>
-                            {{ $raza['nombre'] }}
-                        </option>
-                    @endforeach
-                </select>
+               <input id="{{ $prefijo }}-raza" name="mascotas[{{ $indice }}][raza]" type="text"
+                maxlength="100" list="{{ $prefijo }}-lista-razas" placeholder="Ej. Mestizo"
+                class="campo" data-raza value="{{ old("mascotas.$indice.raza") }}">
+            <datalist id="{{ $prefijo }}-lista-razas">
+                @foreach ($razasPorEspecie[old("mascotas.$indice.especie")] ?? [] as $raza)
+                    <option value="{{ $raza }}">
+                @endforeach
+            </datalist>
             </div>
 
             <div>

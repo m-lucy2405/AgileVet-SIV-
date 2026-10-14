@@ -12,15 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const razasPorEspecie = JSON.parse(formulario.dataset.razas || '{}');
     let siguienteIndice = Number(lista.dataset.siguienteIndice) || 1;
 
-     // Llena el select de razas según la especie elegida
+     // Cambia las sugerencias de raza según la especie elegida
     const cargarRazas = (selectEspecie) => {
-        const selectRaza = selectEspecie.closest('[data-mascota]').querySelector('[data-raza]');
+        const inputRaza = selectEspecie.closest('[data-mascota]').querySelector('[data-raza]');
+        const sugerencias = document.getElementById(inputRaza.getAttribute('list'));
         const razas = razasPorEspecie[selectEspecie.value] || [];
 
-        selectRaza.innerHTML = '';
-        selectRaza.add(new Option(razas.length ? 'Selecciona una raza' : 'Primero elige la especie', ''));
-        razas.forEach((raza) => selectRaza.add(new Option(raza.nombre, raza.id)));
-        selectRaza.disabled = razas.length === 0;
+        sugerencias.replaceChildren(...razas.map((raza) => new Option(raza, raza)));
+        inputRaza.value = '';
     };
 
      // Muestra la edad aproximada a partir de la fecha de nacimiento
