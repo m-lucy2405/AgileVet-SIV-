@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById('form-registro');
 
@@ -12,15 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const razasPorEspecie = JSON.parse(formulario.dataset.razas || '{}');
     let siguienteIndice = Number(lista.dataset.siguienteIndice) || 1;
 
-     // Llena el select de razas según la especie elegida
+     // Cambia las sugerencias de raza según la especie elegida
     const cargarRazas = (selectEspecie) => {
-        const selectRaza = selectEspecie.closest('[data-mascota]').querySelector('[data-raza]');
+        const inputRaza = selectEspecie.closest('[data-mascota]').querySelector('[data-raza]');
+        const sugerencias = document.getElementById(inputRaza.getAttribute('list'));
         const razas = razasPorEspecie[selectEspecie.value] || [];
 
-        selectRaza.innerHTML = '';
-        selectRaza.add(new Option(razas.length ? 'Selecciona una raza' : 'Primero elige la especie', ''));
-        razas.forEach((raza) => selectRaza.add(new Option(raza.nombre, raza.id)));
-        selectRaza.disabled = razas.length === 0;
+        sugerencias.replaceChildren(...razas.map((raza) => new Option(raza, raza)));
+        inputRaza.value = '';
     };
 
      // Muestra la edad aproximada a partir de la fecha de nacimiento
@@ -28,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const salida = inputFecha.closest('[data-mascota]').querySelector('[data-edad]');
 
         if (!inputFecha.value) {
-            salida.textContent = TEXTO_EDAD_INICIAL;
+             salida.textContent = '';
             return;
         }
 
@@ -50,23 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resto || !anios) partes.push(`${resto} ${resto === 1 ? 'mes' : 'meses'}`);
 
         salida.textContent = `Edad aproximada: ${partes.join(' y ')}`;
-    };
-
-    // Muestra la foto elegida antes de guardar
-    const mostrarFoto = (inputFoto) => {
-        const vista = inputFoto.closest('[data-mascota]').querySelector('[data-vista-foto]');
-        const archivo = inputFoto.files[0];
-
-        if (!archivo) {
-            vista.textContent = 'Sin foto';
-            return;
-        }
-
-        const imagen = document.createElement('img');
-        imagen.src = URL.createObjectURL(archivo);
-        imagen.alt = 'Foto de la mascota';
-        imagen.className = 'h-full w-full object-cover';
-        vista.replaceChildren(imagen);
     };
 
     // Numera las mascotas y oculta "Quitar" si solo hay una
@@ -95,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (campo.matches('[data-especie]')) cargarRazas(campo);
         if (campo.matches('[data-fecha-nacimiento]')) calcularEdad(campo);
-        if (campo.matches('[data-foto]')) mostrarFoto(campo);
     });
 
     // Quitar una mascota
