@@ -76,7 +76,7 @@
             <div>
                 <label for="{{ $prefijo }}-color" class="etiqueta">Color</label>
                 <input id="{{ $prefijo }}-color" name="mascotas[{{ $indice }}][color]" type="text"
-                    maxlength="100" placeholder="Ej. Café con blanco" class="campo"
+                    maxlength="50" placeholder="Ej. Café con blanco" class="campo"
                     value="{{ old("mascotas.$indice.color") }}">
             </div>
 
