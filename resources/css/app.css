@@ -6,4 +6,41 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primario-50: #f0fdfa;
+    --color-primario-100: #ccfbf1;
+    --color-primario-200: #99f6e4;
+    --color-primario-300: #5eead4;
+    --color-primario-500: #14b8a6;
+    --color-primario-600: #0d9488;
+    --color-primario-700: #0f766e;
+    --color-primario-800: #115e59;
+    --color-primario-900: #134e4a;
+
+    --color-acento-500: #f59e0b;
+    --color-acento-600: #d97706;
+
+    --color-fondo: #f8fafc;
+}
+
+@layer components {
+    .etiqueta {
+        @apply mb-1 block text-sm font-medium text-gray-700;
+    }
+
+    .campo {
+        @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-primario-500 focus:outline-none focus:ring-2 focus:ring-primario-200;
+    }
+
+    .error-campo {
+        @apply mt-1 text-xs text-red-600;
+    }
+
+    .btn-primario {
+        @apply inline-flex items-center justify-center rounded-lg bg-primario-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primario-800 focus:outline-none focus:ring-2 focus:ring-primario-300;
+    }
+
+    .btn-secundario {
+        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50;
+    }
 }
