@@ -52,23 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         salida.textContent = `Edad aproximada: ${partes.join(' y ')}`;
     };
 
-    // Muestra la foto elegida antes de guardar
-    const mostrarFoto = (inputFoto) => {
-        const vista = inputFoto.closest('[data-mascota]').querySelector('[data-vista-foto]');
-        const archivo = inputFoto.files[0];
-
-        if (!archivo) {
-            vista.textContent = 'Sin foto';
-            return;
-        }
-
-        const imagen = document.createElement('img');
-        imagen.src = URL.createObjectURL(archivo);
-        imagen.alt = 'Foto de la mascota';
-        imagen.className = 'h-full w-full object-cover';
-        vista.replaceChildren(imagen);
-    };
-
     // Numera las mascotas y oculta "Quitar" si solo hay una
     const actualizarTarjetas = () => {
         const tarjetas = lista.querySelectorAll('[data-mascota]');
@@ -95,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (campo.matches('[data-especie]')) cargarRazas(campo);
         if (campo.matches('[data-fecha-nacimiento]')) calcularEdad(campo);
-        if (campo.matches('[data-foto]')) mostrarFoto(campo);
     });
 
     // Quitar una mascota
