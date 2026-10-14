@@ -52,7 +52,7 @@
             </div>
         @endif
 
-        <form id="form-registro" method="POST" action="#" enctype="multipart/form-data"
+         <form id="form-registro" method="POST" action="#"
             data-razas='@json($razasPorEspecie)' class="space-y-6">
             @csrf
 
