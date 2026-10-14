@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById('form-registro');
 
@@ -27,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const salida = inputFecha.closest('[data-mascota]').querySelector('[data-edad]');
 
         if (!inputFecha.value) {
-            salida.textContent = TEXTO_EDAD_INICIAL;
+             salida.textContent = '';
             return;
         }
 

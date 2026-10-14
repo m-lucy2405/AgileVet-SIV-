@@ -67,7 +67,7 @@
                 <input id="{{ $prefijo }}-fecha" name="mascotas[{{ $indice }}][fecha_nacimiento]" type="date"
                     max="{{ date('Y-m-d') }}" class="campo" data-fecha-nacimiento
                     value="{{ old("mascotas.$indice.fecha_nacimiento") }}">
-                <p class="mt-1 text-xs text-gray-500" data-edad>Si no la conoce, use una fecha aproximada.</p>
+                 <p class="mt-1 text-xs text-gray-500" data-edad></p>
             </div>
 
             <div>
