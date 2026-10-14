@@ -80,16 +80,6 @@
                     value="{{ old("mascotas.$indice.color") }}">
             </div>
 
-            <div>
-                <label for="{{ $prefijo }}-microchip" class="etiqueta">Microchip</label>
-                <input id="{{ $prefijo }}-microchip" name="mascotas[{{ $indice }}][microchip]" type="text"
-                    maxlength="50" placeholder="Opcional" class="campo"
-                    value="{{ old("mascotas.$indice.microchip") }}">
-                @error("mascotas.$indice.microchip")
-                    <p class="error-campo">{{ $message }}</p>
-                @enderror
-            </div>
-
             <div class="flex items-end">
                 <label class="flex items-center gap-2 pb-2 text-sm text-gray-700">
                     <input type="hidden" name="mascotas[{{ $indice }}][esterilizado]" value="0">
