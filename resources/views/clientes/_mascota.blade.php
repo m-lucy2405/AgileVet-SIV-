@@ -1,5 +1,5 @@
 @php
-    $especieElegida = old("mascotas.$indice.especie_id");
+    $especieElegida = old("mascotas.$indice.especie");
     $razas = $razasPorEspecie[$especieElegida] ?? [];
     $prefijo = "mascota-$indice";
 @endphp
@@ -28,14 +28,14 @@
 
             <div>
                 <label for="{{ $prefijo }}-especie" class="etiqueta">Especie <span class="text-red-500">*</span></label>
-                <select id="{{ $prefijo }}-especie" name="mascotas[{{ $indice }}][especie_id]"
-                    required class="campo" data-especie>
-                    <option value="">Selecciona</option>
-                    @foreach ($especies as $id => $nombreEspecie)
-                        <option value="{{ $id }}" @selected($especieElegida == $id)>{{ $nombreEspecie }}</option>
-                    @endforeach
-                </select>
-                @error("mascotas.$indice.especie_id")
+                  <select id="{{ $prefijo }}-especie" name="mascotas[{{ $indice }}][especie]"
+                required class="campo" data-especie>
+                <option value="">Selecciona</option>
+                @foreach ($especies as $especie)
+                    <option value="{{ $especie }}" @selected($especieElegida === $especie)>{{ $especie }}</option>
+                @endforeach
+            </select>
+            @error("mascotas.$indice.especie")
                     <p class="error-campo">{{ $message }}</p>
                 @enderror
             </div>

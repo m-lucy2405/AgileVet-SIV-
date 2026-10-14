@@ -4,38 +4,36 @@
 
 @section('contenido')
     @php
-        // Catálogos de ejemplo para la maquetación.
-        // Se reemplazan por las tablas especies y razas cuando exista el controlador.
-        $especies = [1 => 'Canino', 2 => 'Felino', 3 => 'Ave', 4 => 'Bovino', 5 => 'Porcino'];
+     
+      $especies = ['Canino', 'Felino', 'Ave', 'Bovino', 'Porcino'];
 
-        $razasPorEspecie = [
-            1 => [
+         $razasPorEspecie = [
+            'Canino' => [
                 ['id' => 1, 'nombre' => 'Mestizo'],
                 ['id' => 2, 'nombre' => 'Labrador'],
                 ['id' => 3, 'nombre' => 'Pastor Alemán'],
                 ['id' => 4, 'nombre' => 'Chihuahua'],
                 ['id' => 5, 'nombre' => 'Poodle'],
             ],
-            2 => [
+            'Felino' => [
                 ['id' => 6, 'nombre' => 'Mestizo'],
                 ['id' => 7, 'nombre' => 'Siamés'],
                 ['id' => 8, 'nombre' => 'Persa'],
             ],
-            3 => [
+            'Ave' => [
                 ['id' => 9, 'nombre' => 'Gallina criolla'],
                 ['id' => 10, 'nombre' => 'Perico australiano'],
             ],
-            4 => [
+            'Bovino' => [
                 ['id' => 11, 'nombre' => 'Brahman'],
                 ['id' => 12, 'nombre' => 'Holstein'],
             ],
-            5 => [
+            'Porcino' => [
                 ['id' => 13, 'nombre' => 'Landrace'],
                 ['id' => 14, 'nombre' => 'Duroc'],
             ],
         ];
 
-        // Si hubo error de validación, vuelve a mostrar todas las mascotas que se habían agregado
         $indicesMascotas = array_keys(old('mascotas', [0 => []]));
     @endphp
 
