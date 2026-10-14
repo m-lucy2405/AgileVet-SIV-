@@ -13,21 +13,7 @@
         </button>
     </div>
 
-    <div class="grid gap-5 md:grid-cols-[8rem_1fr]">
-
-        {{-- Foto --}}
-        <div>
-            <div data-vista-foto
-                class="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-xs text-gray-400">
-                Sin foto
-            </div>
-            <label for="{{ $prefijo }}-foto"
-                class="mt-2 inline-block cursor-pointer text-xs font-medium text-primario-700 hover:underline">
-                Subir foto
-            </label>
-            <input id="{{ $prefijo }}-foto" name="mascotas[{{ $indice }}][foto]" type="file"
-                accept="image/*" class="sr-only" data-foto>
-        </div>
+    
 
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
@@ -114,5 +100,4 @@
                 </label>
             </div>
         </div>
-    </div>
 </div>
