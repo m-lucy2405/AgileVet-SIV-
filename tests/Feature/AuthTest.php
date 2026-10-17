@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,6 +13,10 @@ class AuthTest extends TestCase
     public function test_seeded_admin_can_log_in_with_the_test_credentials(): void
     {
         $this->seed();
+        $this->seed();
+
+        $this->assertDatabaseCount('roles', 3);
+        $this->assertDatabaseCount('users', 3);
 
         $response = $this->post(route('login.post'), [
             'email' => 'admin@agilevet.com',
@@ -33,6 +38,53 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
+    public function test_inactive_user_cannot_log_in_with_valid_credentials(): void
+    {
+        $this->seed();
+        User::query()
+            ->where('email', 'admin@agilevet.com')
+            ->update(['estado' => false]);
+
+        $response = $this->post(route('login.post'), [
+            'email' => 'admin@agilevet.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
+    public function test_login_is_rate_limited_after_five_attempts(): void
+    {
+        foreach (range(1, 5) as $attempt) {
+            $this->post(route('login.post'), [
+                'email' => 'test@example.com',
+                'password' => 'incorrect-password',
+            ]);
+        }
+
+        $response = $this->post(route('login.post'), [
+            'email' => 'test@example.com',
+            'password' => 'incorrect-password',
+        ]);
+
+        $response->assertTooManyRequests();
+    }
+
+    public function test_authenticated_user_can_log_out(): void
+    {
+        $this->seed();
+        $this->post(route('login.post'), [
+            'email' => 'admin@agilevet.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->post(route('logout'));
+
+        $response->assertRedirect(route('login'));
         $this->assertGuest();
     }
 }
