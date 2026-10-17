@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -22,8 +23,8 @@ Route::middleware('auth')->group(function () {
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
-        Route::view('/usuarios', 'usuarios.index')->name('usuarios.index');
-        Route::view('/usuarios/crear', 'usuarios.create')->name('usuarios.create');
-        Route::view('/usuarios/{id}/editar', 'usuarios.edit')->name('usuarios.edit');
+        Route::resource('usuarios', UserController::class)
+            ->parameters(['usuarios' => 'user'])
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
 });

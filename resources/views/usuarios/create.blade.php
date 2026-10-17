@@ -12,10 +12,10 @@
             <h2 class="text-base font-semibold text-gray-800">Datos del usuario</h2>
             <p class="mt-1 text-sm text-gray-500">Completa la información para registrar un nuevo usuario.</p>
 
-            <form method="POST" action="#" class="mt-6">
+            <form method="POST" action="{{ route('usuarios.store') }}" class="mt-6">
                 @csrf
 
-                @include('usuarios._formulario', ['usuario' => null])
+                @include('usuarios._formulario', ['usuario' => null, 'roles' => $roles])
 
                 <div class="mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end">
                     <a href="{{ route('usuarios.index') }}" class="btn-secundario">Cancelar</a>
