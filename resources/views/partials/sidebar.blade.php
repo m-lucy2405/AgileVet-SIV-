@@ -1,4 +1,6 @@
 @php
+    $esAdministrador = auth()->user()?->role?->nombre === 'Administrador';
+
     $secciones = [
         'Principal' => [
             ['texto' => 'Inicio', 'url' => route('dashboard'), 'ruta' => 'dashboard'],
@@ -13,11 +15,14 @@
             ['texto' => 'Ventas', 'url' => '#', 'ruta' => 'ventas*'],
             ['texto' => 'Reportes', 'url' => '#', 'ruta' => 'reportes*'],
         ],
-        'Administración' => [
+    ];
+
+    if ($esAdministrador) {
+        $secciones['Administración'] = [
             ['texto' => 'Usuarios', 'url' => route('usuarios.index'), 'ruta' => 'usuarios*'],
             ['texto' => 'Auditoría', 'url' => '#', 'ruta' => 'auditoria*'],
-        ],
-    ];
+        ];
+    }
 @endphp
 
 <aside id="sidebar"

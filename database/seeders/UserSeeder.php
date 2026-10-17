@@ -2,32 +2,53 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use RuntimeException;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->create([
-            'nombre' => 'Administrador AgileVet',
-            'email' => 'admin@agilevet.com',
-            'rol_id' => 1,
-            'estado' => true,
-        ]);
+        $users = [
+            [
+                'nombre' => 'Administrador AgileVet',
+                'email' => 'admin@agilevet.com',
+                'rol' => 'Administrador',
+            ],
+            [
+                'nombre' => 'Dr. Juan Veterinario',
+                'email' => 'veterinario@agilevet.com',
+                'rol' => 'Veterinario',
+            ],
+            [
+                'nombre' => 'Recepcion AgileVet',
+                'email' => 'recepcion@agilevet.com',
+                'rol' => 'Recepcionista',
+            ],
+        ];
 
-        User::factory()->create([
-            'nombre' => 'Dr. Juan Veterinario',
-            'email' => 'veterinario@agilevet.com',
-            'rol_id' => 2,
-            'estado' => true,
-        ]);
+        foreach ($users as $user) {
+            $roleId = Role::query()
+                ->where('nombre', $user['rol'])
+                ->value('id');
 
-        User::factory()->create([
-            'nombre' => 'Recepcion AgileVet',
-            'email' => 'recepcion@agilevet.com',
-            'rol_id' => 3,
-            'estado' => true,
-        ]);
+            if ($roleId === null) {
+                throw new RuntimeException(
+                    "No existe el rol {$user['rol']}. Ejecuta RoleSeeder primero.",
+                );
+            }
+
+            User::query()->firstOrCreate(
+                ['email' => $user['email']],
+                [
+                    'nombre' => $user['nombre'],
+                    'password_hash' => 'password123',
+                    'rol_id' => $roleId,
+                    'estado' => true,
+                ],
+            );
+        }
     }
 }

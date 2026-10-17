@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['nombre', 'email', 'password_hash', 'rol_id', 'estado'])]
+#[Hidden(['password_hash', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -26,7 +27,22 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password_hash' => 'hashed',
         ];
+    }
+
+    /**
+     * Obtiene el rol asignado a este usuario.
+     *
+     * @return BelongsTo<Role, $this> Relación con el rol del usuario.
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'rol_id');
+    }
+
+    public function getAuthPasswordName(): string
+    {
+        return 'password_hash';
     }
 }
