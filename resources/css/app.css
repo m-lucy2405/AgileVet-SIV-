@@ -44,3 +44,31 @@
         @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50;
     }
 }
+
+/* Calendario de citas (FullCalendar) */
+#calendario-citas {
+    --fc-border-color: #e5e7eb;
+    --fc-button-bg-color: #0f766e;
+    --fc-button-border-color: #0f766e;
+    --fc-button-hover-bg-color: #115e59;
+    --fc-button-hover-border-color: #115e59;
+    --fc-button-active-bg-color: #134e4a;
+    --fc-button-active-border-color: #134e4a;
+    --fc-today-bg-color: #f0fdfa;
+    --fc-now-indicator-color: #f59e0b;
+    font-size: 0.875rem;
+}
+
+#calendario-citas .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+#calendario-citas .fc-toolbar-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+#calendario-citas .fc-event {
+    cursor: pointer;
+}
