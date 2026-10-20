@@ -16,6 +16,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const citas = JSON.parse(contenedor.dataset.citas || '[]');
     const esPantallaPequena = () => window.innerWidth < 768;
+    
+    const textoAyuda = document.getElementById('fecha-seleccionada');
+    const detalle = document.getElementById('detalle-cita');
+
+    const formatoFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const formatoHora = { hour: '2-digit', minute: '2-digit' };
+
+    // Muestra los datos de la cita elegida en el panel lateral
+    const mostrarCita = (evento) => {
+        const inicio = evento.start;
+        const fin = evento.end ?? evento.start;
+        const datos = {
+            ...evento.extendedProps,
+            horario: `${inicio.toLocaleDateString('es-SV', formatoFecha)}, de ${inicio.toLocaleTimeString('es-SV', formatoHora)} a ${fin.toLocaleTimeString('es-SV', formatoHora)}`,
+        };
+
+        detalle.querySelectorAll('[data-campo]').forEach((campo) => {
+            campo.textContent = datos[campo.dataset.campo] ?? '';
+        });
+
+        textoAyuda.classList.add('hidden');
+        detalle.classList.remove('hidden');
+    };
+
+    // Detecta el día u hora elegida (aquí se abrirá el modal de nueva cita)
+    const seleccionarFecha = (info) => {
+        const fecha = info.date.toLocaleDateString('es-SV', formatoFecha);
+        const hora = info.allDay ? '' : ` a las ${info.date.toLocaleTimeString('es-SV', formatoHora)}`;
+
+        detalle.classList.add('hidden');
+        textoAyuda.classList.remove('hidden');
+        textoAyuda.textContent = `Seleccionaste el ${fecha}${hora}.`;
+    };
 
     const calendario = new Calendar(contenedor, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -38,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nowIndicator: true,
         height: 'auto',
         events: citas,
+          dateClick: seleccionarFecha,
+        eventClick: (info) => mostrarCita(info.event),
         windowResize: () => {
             if (esPantallaPequena() && calendario.view.type === 'timeGridWeek') {
                 calendario.changeView('timeGridDay');
