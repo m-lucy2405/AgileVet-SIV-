@@ -4,21 +4,24 @@
 
 @section('contenido')
     @php
-        // Datos de ejemplo para la maquetación.
-        $usuarios = [
-            ['id' => 1, 'nombre' => 'Carlos Hernández', 'email' => 'admin@lamascota.com', 'rol' => 'Administrador', 'estado' => true],
-            ['id' => 2, 'nombre' => 'María López', 'email' => 'maria.lopez@lamascota.com', 'rol' => 'Veterinario', 'estado' => true],
-            ['id' => 3, 'nombre' => 'José Martínez', 'email' => 'jose.martinez@lamascota.com', 'rol' => 'Veterinario', 'estado' => true],
-            ['id' => 4, 'nombre' => 'Ana Rivera', 'email' => 'ana.rivera@lamascota.com', 'rol' => 'Recepcionista', 'estado' => true],
-            ['id' => 5, 'nombre' => 'Luis Gómez', 'email' => 'luis.gomez@lamascota.com', 'rol' => 'Recepcionista', 'estado' => false],
-        ];
-
         $coloresRol = [
             'Administrador' => 'bg-acento-500/15 text-acento-600',
             'Veterinario' => 'bg-primario-100 text-primario-700',
             'Recepcionista' => 'bg-gray-100 text-gray-700',
         ];
     @endphp
+
+    @if (session('status'))
+        <div role="status" class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if ($errors->has('usuario'))
+        <div role="alert" class="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+            {{ $errors->first('usuario') }}
+        </div>
+    @endif
 
     {{-- Barra de búsqueda y botón nuevo --}}
     <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -28,9 +31,11 @@
 
             <select name="rol" class="campo sm:w-48">
                 <option value="">Todos los roles</option>
-                <option value="1" @selected(request('rol') == 1)>Administrador</option>
-                <option value="2" @selected(request('rol') == 2)>Veterinario</option>
-                <option value="3" @selected(request('rol') == 3)>Recepcionista</option>
+                @foreach ($roles as $rol)
+                    <option value="{{ $rol->id }}" @selected(request('rol') == $rol->id)>
+                        {{ $rol->nombre }}
+                    </option>
+                @endforeach
             </select>
 
             <button type="submit" class="btn-secundario">Filtrar</button>
@@ -59,22 +64,22 @@
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primario-100 text-xs font-semibold text-primario-700">
-                                        {{ mb_substr($usuario['nombre'], 0, 1) }}
+                                        {{ mb_substr($usuario->nombre, 0, 1) }}
                                     </span>
-                                    <span class="font-medium text-gray-800">{{ $usuario['nombre'] }}</span>
+                                    <span class="font-medium text-gray-800">{{ $usuario->nombre }}</span>
                                 </div>
                             </td>
 
-                            <td class="px-4 py-3 text-gray-600">{{ $usuario['email'] }}</td>
+                            <td class="px-4 py-3 text-gray-600">{{ $usuario->email }}</td>
 
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $coloresRol[$usuario['rol']] }}">
-                                    {{ $usuario['rol'] }}
+                                <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $coloresRol[$usuario->role->nombre] ?? 'bg-gray-100 text-gray-700' }}">
+                                    {{ $usuario->role->nombre }}
                                 </span>
                             </td>
 
                             <td class="px-4 py-3">
-                                @if ($usuario['estado'])
+                                @if ($usuario->estado)
                                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-700">
                                         <span class="h-2 w-2 rounded-full bg-green-500"></span> Activo
                                     </span>
@@ -87,15 +92,21 @@
 
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
-                                    <a href="{{ route('usuarios.edit', $usuario['id']) }}"
+                                    <a href="{{ route('usuarios.edit', $usuario) }}"
                                         class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-700 hover:bg-primario-50">
                                         Editar
                                     </a>
 
-                                    <button type="button"
-                                        class="rounded-md px-2.5 py-1.5 text-xs font-medium {{ $usuario['estado'] ? 'text-red-600 hover:bg-red-50' : 'text-green-700 hover:bg-green-50' }}">
-                                        {{ $usuario['estado'] ? 'Desactivar' : 'Activar' }}
-                                    </button>
+                                    @if ($usuario->estado)
+                                        <form method="POST" action="{{ route('usuarios.destroy', $usuario) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
+                                                Desactivar
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -111,7 +122,12 @@
         </div>
 
         <div class="border-t border-gray-200 px-4 py-3 text-xs text-gray-500">
-            Mostrando {{ count($usuarios) }} usuarios
+            Mostrando {{ $usuarios->firstItem() ?? 0 }}–{{ $usuarios->lastItem() ?? 0 }}
+            de {{ $usuarios->total() }} usuarios
         </div>
+    </div>
+
+    <div class="mt-4">
+        {{ $usuarios->links() }}
     </div>
 @endsection

@@ -9,15 +9,13 @@ use Illuminate\View\View;
 
 /**
  * Controlador para el inicio y cierre de sesión de usuarios.
- *
- * @package App\Http\Controllers
  */
 class AuthController extends Controller
 {
     /**
      * Muestra el formulario de inicio de sesión.
      *
-     * @return \Illuminate\View\View Vista del login.
+     * @return View Vista del login.
      */
     public function showLogin(): View
     {
@@ -27,8 +25,8 @@ class AuthController extends Controller
     /**
      * Valida las credenciales e inicia la sesión del usuario.
      *
-     * @param \Illuminate\Http\Request $request Correo y contraseña.
-     * @return \Illuminate\Http\RedirectResponse Redirección al dashboard o de vuelta al login.
+     * @param  Request  $request  Correo y contraseña.
+     * @return RedirectResponse Redirección al dashboard o de vuelta al login.
      */
     public function login(Request $request): RedirectResponse
     {
@@ -37,7 +35,10 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt(
+            [...$credentials, 'estado' => true],
+            $request->boolean('remember'),
+        )) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard'));
@@ -51,8 +52,8 @@ class AuthController extends Controller
     /**
      * Cierra la sesión del usuario.
      *
-     * @param \Illuminate\Http\Request $request Petición actual.
-     * @return \Illuminate\Http\RedirectResponse Redirección al login.
+     * @param  Request  $request  Petición actual.
+     * @return RedirectResponse Redirección al login.
      */
     public function logout(Request $request): RedirectResponse
     {

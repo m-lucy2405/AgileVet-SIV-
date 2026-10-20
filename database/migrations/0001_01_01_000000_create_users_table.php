@@ -29,6 +29,8 @@ return new class extends Migration
             $table->boolean('estado')
                   ->default(true);
 
+            $table->rememberToken()->default(null);
+
             $table->timestamps();
         });
 

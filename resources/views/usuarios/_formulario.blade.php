@@ -1,13 +1,12 @@
 @php
-    $roles = [1 => 'Administrador', 2 => 'Veterinario', 3 => 'Recepcionista'];
-    $esEdicion = ! empty($usuario);
+    $esEdicion = $usuario !== null;
 @endphp
 
 <div class="grid gap-5 sm:grid-cols-2">
     <div class="sm:col-span-2">
         <label for="nombre" class="etiqueta">Nombre completo</label>
         <input id="nombre" name="nombre" type="text" required class="campo"
-            value="{{ old('nombre', $usuario['nombre'] ?? '') }}">
+            value="{{ old('nombre', $usuario?->nombre ?? '') }}" maxlength="100">
         @error('nombre')
             <p class="error-campo">{{ $message }}</p>
         @enderror
@@ -16,7 +15,7 @@
     <div class="sm:col-span-2">
         <label for="email" class="etiqueta">Correo electrónico</label>
         <input id="email" name="email" type="email" required class="campo"
-            value="{{ old('email', $usuario['email'] ?? '') }}">
+            value="{{ old('email', $usuario?->email ?? '') }}" maxlength="150">
         @error('email')
             <p class="error-campo">{{ $message }}</p>
         @enderror
@@ -44,9 +43,9 @@
         <label for="rol_id" class="etiqueta">Rol</label>
         <select id="rol_id" name="rol_id" required class="campo">
             <option value="">Selecciona un rol</option>
-            @foreach ($roles as $id => $nombreRol)
-                <option value="{{ $id }}" @selected(old('rol_id', $usuario['rol_id'] ?? '') == $id)>
-                    {{ $nombreRol }}
+            @foreach ($roles as $rol)
+                <option value="{{ $rol->id }}" @selected(old('rol_id', $usuario?->rol_id ?? '') == $rol->id)>
+                    {{ $rol->nombre }}
                 </option>
             @endforeach
         </select>
@@ -58,8 +57,11 @@
     <div>
         <label for="estado" class="etiqueta">Estado</label>
         <select id="estado" name="estado" class="campo">
-            <option value="1" @selected(old('estado', $usuario['estado'] ?? 1) == 1)>Activo</option>
-            <option value="0" @selected(old('estado', $usuario['estado'] ?? 1) == 0)>Inactivo</option>
+            <option value="1" @selected(old('estado', $usuario?->estado ?? true) == 1)>Activo</option>
+            <option value="0" @selected(old('estado', $usuario?->estado ?? true) == 0)>Inactivo</option>
         </select>
+        @error('estado')
+            <p class="error-campo">{{ $message }}</p>
+        @enderror
     </div>
 </div>
