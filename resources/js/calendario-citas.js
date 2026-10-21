@@ -14,7 +14,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!contenedor) return;
 
-    const citas = JSON.parse(contenedor.dataset.citas || '[]');
+     const estados = JSON.parse(contenedor.dataset.estados || '{}');
+
+    // Convierte cada cita que envía el controlador al formato de FullCalendar
+    const aEvento = (cita) => {
+        const estado = estados[cita.estado] ?? { nombre: cita.estado, color: '#6b7280' };
+
+        return {
+            id: cita.id,
+            title: `${cita.mascota} · ${cita.motivo}`,
+            start: cita.start,
+            end: cita.end,
+            backgroundColor: estado.color,
+            borderColor: estado.color,
+            extendedProps: {
+                mascota: cita.mascota,
+                motivo: cita.motivo,
+                cliente: cita.cliente,
+                telefono: cita.telefono,
+                veterinario: cita.veterinario,
+                estado: estado.nombre,
+            },
+        };
+    };
+
+    const citas = JSON.parse(contenedor.dataset.citas || '[]').map(aEvento);
     const esPantallaPequena = () => window.innerWidth < 768;
     
     const textoAyuda = document.getElementById('fecha-seleccionada');
