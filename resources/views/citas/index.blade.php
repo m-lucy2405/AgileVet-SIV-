@@ -89,4 +89,77 @@
             </dl>
         </div>
     </div>
+
+        {{-- Ventana emergente para registrar una cita --}}
+    {{-- $mascotas (id, nombre, cliente, telefono) y $veterinarios (id, nombre) los envía CitaController --}}
+    <div id="modal-nueva-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="modal-nueva-cita-titulo">
+        <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+
+            <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Nueva cita</p>
+                    <h2 id="modal-nueva-cita-titulo" class="mt-0.5 text-base font-semibold text-gray-800">Agendar cita</h2>
+                </div>
+
+                <button type="button" data-cerrar-modal aria-label="Cerrar"
+                    class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="form-nueva-cita" action="#" method="POST" class="space-y-4 px-5 py-4">
+                @csrf
+                <input type="hidden" name="estado" value="pendiente">
+
+                <div>
+                    <label for="mascota_id" class="etiqueta">Mascota</label>
+                    <select id="mascota_id" name="mascota_id" class="campo" required>
+                        <option value="">Selecciona una mascota</option>
+                        @foreach ($mascotas ?? [] as $mascota)
+                            <option value="{{ $mascota['id'] }}" data-nombre="{{ $mascota['nombre'] }}"
+                                data-cliente="{{ $mascota['cliente'] }}" data-telefono="{{ $mascota['telefono'] }}">
+                                {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="usuario_id" class="etiqueta">Veterinario</label>
+                    <select id="usuario_id" name="usuario_id" class="campo" required>
+                        <option value="">Selecciona un veterinario</option>
+                        @foreach ($veterinarios ?? [] as $veterinario)
+                            <option value="{{ $veterinario['id'] }}">{{ $veterinario['nombre'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="fecha_hora" class="etiqueta">Fecha y hora</label>
+                    <input type="datetime-local" id="fecha_hora" name="fecha_hora" class="campo" step="1800" required>
+                </div>
+
+                <div>
+                    <label for="motivo" class="etiqueta">Motivo</label>
+                    <input type="text" id="motivo" name="motivo" class="campo" maxlength="255"
+                        placeholder="Ej. Vacunación" required>
+                </div>
+
+                <div>
+                    <label for="observaciones" class="etiqueta">
+                        Observaciones <span class="font-normal text-gray-400">(opcional)</span>
+                    </label>
+                    <textarea id="observaciones" name="observaciones" rows="3" class="campo"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                    <button type="button" data-cerrar-modal class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-primario">Guardar cita</button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
