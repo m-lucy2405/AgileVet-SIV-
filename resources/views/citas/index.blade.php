@@ -12,50 +12,15 @@
             'no_asistio' => ['nombre' => 'No asistió', 'color' => '#6b7280'],
         ];
 
-        // Citas de ejemplo para la maquetación.
-        // Se reemplazan por las citas reales cuando exista el controlador.
-        $hoy = now()->startOfDay();
-
-        $citasEjemplo = [
-            ['dia' => -1, 'hora' => '09:30', 'minutos' => 30, 'mascota' => 'Luna', 'motivo' => 'Control general', 'cliente' => 'María López', 'telefono' => '7123-4567', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'atendida'],
-            ['dia' => -1, 'hora' => '16:00', 'minutos' => 30, 'mascota' => 'Rocky', 'motivo' => 'Desparasitación', 'cliente' => 'José Martínez', 'telefono' => '7890-1234', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'no_asistio'],
-            ['dia' => 0, 'hora' => '08:00', 'minutos' => 30, 'mascota' => 'Firulais', 'motivo' => 'Vacunación antirrábica', 'cliente' => 'Ana Rivera', 'telefono' => '7012-3456', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'pendiente'],
-            ['dia' => 0, 'hora' => '10:30', 'minutos' => 60, 'mascota' => 'Michi', 'motivo' => 'Esterilización', 'cliente' => 'Carlos Hernández', 'telefono' => '7234-5678', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'pendiente'],
-            ['dia' => 0, 'hora' => '14:00', 'minutos' => 30, 'mascota' => 'Toby', 'motivo' => 'Revisión de herida', 'cliente' => 'Luis Gómez', 'telefono' => '7456-7890', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'pendiente'],
-            ['dia' => 1, 'hora' => '09:00', 'minutos' => 30, 'mascota' => 'Canela', 'motivo' => 'Vacuna triple felina', 'cliente' => 'Sofía Ramírez', 'telefono' => '7567-8901', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'pendiente'],
-            ['dia' => 1, 'hora' => '11:00', 'minutos' => 30, 'mascota' => 'Max', 'motivo' => 'Consulta por vómito', 'cliente' => 'Pedro Castillo', 'telefono' => '7678-9012', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'pendiente'],
-            ['dia' => 2, 'hora' => '15:00', 'minutos' => 45, 'mascota' => 'Lola', 'motivo' => 'Baño y corte', 'cliente' => 'Elena Flores', 'telefono' => '7789-0123', 'veterinario' => 'Dr. Juan Veterinario', 'estado' => 'cancelada'],
-        ];
-
-        // Convierte cada cita al formato que usa FullCalendar
-        $eventos = array_map(function (array $cita) use ($hoy, $estados) {
-            [$hora, $minuto] = explode(':', $cita['hora']);
-            $inicio = $hoy->copy()->addDays($cita['dia'])->setTime((int) $hora, (int) $minuto);
-            $color = $estados[$cita['estado']]['color'];
-
-            return [
-                'title' => "{$cita['mascota']} · {$cita['motivo']}",
-                'start' => $inicio->format('Y-m-d\TH:i:s'),
-                'end' => $inicio->copy()->addMinutes($cita['minutos'])->format('Y-m-d\TH:i:s'),
-                'backgroundColor' => $color,
-                'borderColor' => $color,
-                'extendedProps' => [
-                    'mascota' => $cita['mascota'],
-                    'motivo' => $cita['motivo'],
-                    'cliente' => $cita['cliente'],
-                    'telefono' => $cita['telefono'],
-                    'veterinario' => $cita['veterinario'],
-                    'estado' => $estados[$cita['estado']]['nombre'],
-                ],
-            ];
-        }, $citasEjemplo);
+       
     @endphp
 
     <div class="grid gap-6 xl:grid-cols-[1fr_18rem]">
 
         {{-- Calendario --}}
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-            <div id="calendario-citas" data-citas='@json($eventos)'></div>
+            {{-- $citas lo envía CitaController. Cada cita: id, start, end, estado, mascota, motivo, cliente, telefono, veterinario --}}
+            <div id="calendario-citas" data-citas='@json($citas ?? [])' data-estados='@json($estados)'></div>
         </div>
 
         <aside class="space-y-6">
@@ -122,6 +87,78 @@
                     </dd>
                 </div>
             </dl>
+        </div>
+    </div>
+
+        {{-- Ventana emergente para registrar una cita --}}
+    {{-- $mascotas (id, nombre, cliente, telefono) y $veterinarios (id, nombre) los envía CitaController --}}
+    <div id="modal-nueva-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="modal-nueva-cita-titulo">
+        <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+
+            <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Nueva cita</p>
+                    <h2 id="modal-nueva-cita-titulo" class="mt-0.5 text-base font-semibold text-gray-800">Agendar cita</h2>
+                </div>
+
+                <button type="button" data-cerrar-modal aria-label="Cerrar"
+                    class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+             <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
+                @csrf
+                <input type="hidden" name="estado" value="pendiente">
+
+                <div>
+                    <label for="mascota_id" class="etiqueta">Mascota</label>
+                    <select id="mascota_id" name="mascota_id" class="campo" required>
+                        <option value="">Selecciona una mascota</option>
+                        @foreach ($mascotas ?? [] as $mascota)
+                            <option value="{{ $mascota['id'] }}">  
+                                {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="usuario_id" class="etiqueta">Veterinario</label>
+                    <select id="usuario_id" name="usuario_id" class="campo" required>
+                        <option value="">Selecciona un veterinario</option>
+                        @foreach ($veterinarios ?? [] as $veterinario)
+                            <option value="{{ $veterinario['id'] }}">{{ $veterinario['nombre'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="fecha_hora" class="etiqueta">Fecha y hora</label>
+                    <input type="datetime-local" id="fecha_hora" name="fecha_hora" class="campo" step="1800" required>
+                </div>
+
+                <div>
+                    <label for="motivo" class="etiqueta">Motivo</label>
+                    <input type="text" id="motivo" name="motivo" class="campo" maxlength="255"
+                        placeholder="Ej. Vacunación" required>
+                </div>
+
+                <div>
+                    <label for="observaciones" class="etiqueta">
+                        Observaciones <span class="font-normal text-gray-400">(opcional)</span>
+                    </label>
+                    <textarea id="observaciones" name="observaciones" rows="3" class="campo"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                    <button type="button" data-cerrar-modal class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-primario">Guardar cita</button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection
