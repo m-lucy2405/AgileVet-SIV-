@@ -1,4 +1,5 @@
 import './registro-cliente-mascota';
+import './calendario-citas';
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');

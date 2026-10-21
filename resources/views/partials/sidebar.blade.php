@@ -4,7 +4,7 @@
     $secciones = [
         'Principal' => [
             ['texto' => 'Inicio', 'url' => route('dashboard'), 'ruta' => 'dashboard'],
-            ['texto' => 'Citas', 'url' => '#', 'ruta' => 'citas*'],
+            ['texto' => 'Citas', 'url' => route('citas.index'), 'ruta' => 'citas*'],
         ],
         'Atención' => [
             ['texto' => 'Clientes y mascotas', 'url' => route('clientes.registro'), 'ruta' => 'clientes*'],
