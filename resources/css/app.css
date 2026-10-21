@@ -72,3 +72,46 @@
 #calendario-citas .fc-event {
     cursor: pointer;
 }
+
+/* Contenido de cada cita en el calendario */
+#calendario-citas .cita-mes {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0 0.25rem;
+}
+
+#calendario-citas .cita-punto {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+}
+
+#calendario-citas .cita-hora,
+#calendario-citas .cita-texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#calendario-citas .cita-hora {
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+#calendario-citas .cita-texto {
+    font-weight: 600;
+}
+
+#calendario-citas .fc-timegrid-event .fc-event-main {
+    padding: 2px 4px;
+    overflow: hidden;
+}
+
+/* Filas de horas más altas para que quepan dos líneas */
+#calendario-citas .fc-timegrid-slot {
+    height: 2.25rem;
+}
