@@ -8,6 +8,7 @@ import esLocale from '@fullcalendar/core/locales/es';
 const HORA_APERTURA = '07:00';
 const HORA_CIERRE = '18:00';
 const DIAS_ATENCION = [1, 2, 3, 4, 5, 6];
+const DURACION_CITA_MINUTOS = 30;
 
 document.addEventListener('DOMContentLoaded', () => {
     const contenedor = document.getElementById('calendario-citas');
@@ -134,12 +135,62 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!ventana.classList.contains('hidden')) cerrarVentana(ventana);
         });
     });
-    
-    // Detecta el día u hora elegida (aquí se abrirá el modal de nueva cita)
+
+        const formulario = document.getElementById('form-nueva-cita');
+    const campoFecha = formulario.elements.fecha_hora;
+    const sumarMinutos = (fecha, minutos) => new Date(fecha.getTime() + minutos * 60000);
+
+    // Pasa una fecha al formato del input datetime-local (AAAA-MM-DDTHH:MM)
+    const aCampoFecha = (fecha) => {
+        const local = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 16);
+    };
+
+    // Revisa si ya hay una cita en ese horario (las canceladas no cuentan)
+    const horarioOcupado = (inicio) => {
+        const fin = sumarMinutos(inicio, DURACION_CITA_MINUTOS);
+
+        return calendario.getEvents().some((cita) => {
+            if (cita.extendedProps.estado === estados.cancelada.nombre) return false;
+            const finCita = cita.end ?? sumarMinutos(cita.start, DURACION_CITA_MINUTOS);
+            return inicio < finCita && fin > cita.start;
+        });
+    };
+
+    // Abre el formulario con el día y la hora elegidos
     const seleccionarFecha = (info) => {
-        const fecha = info.date.toLocaleDateString('es-SV', formatoFecha);
-        const hora = info.allDay ? '' : ` a las ${info.date.toLocaleTimeString('es-SV', formatoHora)}`;
-        textoAyuda.textContent = `Seleccionaste el ${fecha}${hora}.`;
+        const inicio = new Date(info.date);
+
+        // En la vista de mes se propone la hora de apertura
+        if (info.allDay) {
+            const [hora, minutos] = HORA_APERTURA.split(':');
+            inicio.setHours(hora, minutos, 0, 0);
+        }
+
+        const fecha = inicio.toLocaleDateString('es-SV', formatoFecha);
+        const hora = inicio.toLocaleTimeString('es-SV', formatoHora);
+        const horaTexto = inicio.toTimeString().slice(0, 5);
+
+        if (inicio < new Date()) {
+            textoAyuda.textContent = 'No se pueden agendar citas en fechas u horas pasadas.';
+            return;
+        }
+
+        if (!DIAS_ATENCION.includes(inicio.getDay()) || horaTexto < HORA_APERTURA || horaTexto >= HORA_CIERRE) {
+            textoAyuda.textContent = 'La clínica no atiende en ese horario.';
+            return;
+        }
+
+        if (horarioOcupado(inicio)) {
+            textoAyuda.textContent = `Ya hay una cita el ${fecha} a las ${hora}.`;
+            return;
+        }
+
+        textoAyuda.textContent = `Seleccionaste el ${fecha} a las ${hora}.`;
+        formulario.reset();
+        campoFecha.value = aCampoFecha(inicio);
+        abrirVentana(modalNueva);
+        formulario.elements.mascota_id.focus();
     };
 
     const calendario = new Calendar(contenedor, {
