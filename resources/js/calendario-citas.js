@@ -18,12 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const esPantallaPequena = () => window.innerWidth < 768;
     
     const textoAyuda = document.getElementById('fecha-seleccionada');
-    const detalle = document.getElementById('detalle-cita');
+    const modal = document.getElementById('modal-cita');
 
     const formatoFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     const formatoHora = { hour: '2-digit', minute: '2-digit' };
 
-    // Muestra los datos de la cita elegida en el panel lateral
+       // Abre la ventana con los datos de la cita elegida
     const mostrarCita = (evento) => {
         const inicio = evento.start;
         const fin = evento.end ?? evento.start;
@@ -32,21 +32,39 @@ document.addEventListener('DOMContentLoaded', () => {
             horario: `${inicio.toLocaleDateString('es-SV', formatoFecha)}, de ${inicio.toLocaleTimeString('es-SV', formatoHora)} a ${fin.toLocaleTimeString('es-SV', formatoHora)}`,
         };
 
-        detalle.querySelectorAll('[data-campo]').forEach((campo) => {
+        modal.querySelectorAll('[data-campo]').forEach((campo) => {
             campo.textContent = datos[campo.dataset.campo] ?? '';
         });
+        modal.querySelector('[data-campo="estado"]').style.backgroundColor = evento.backgroundColor;
 
-        textoAyuda.classList.add('hidden');
-        detalle.classList.remove('hidden');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        modal.querySelector('[data-cerrar-modal]').focus();
     };
+
+    // Cierra la ventana de la cita
+    const cerrarModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    // Se cierra con la X, al dar clic afuera o con la tecla Esc
+    modal.querySelector('[data-cerrar-modal]').addEventListener('click', cerrarModal);
+
+    modal.addEventListener('click', (evento) => {
+        if (evento.target === modal) cerrarModal();
+    });
+
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape' && !modal.classList.contains('hidden')) cerrarModal();
+    });
 
     // Detecta el día u hora elegida (aquí se abrirá el modal de nueva cita)
     const seleccionarFecha = (info) => {
         const fecha = info.date.toLocaleDateString('es-SV', formatoFecha);
         const hora = info.allDay ? '' : ` a las ${info.date.toLocaleTimeString('es-SV', formatoHora)}`;
-
-        detalle.classList.add('hidden');
-        textoAyuda.classList.remove('hidden');
         textoAyuda.textContent = `Seleccionaste el ${fecha}${hora}.`;
     };
 
