@@ -35,24 +35,17 @@
                             <th class="px-5 py-3">Teléfono</th>
                             <th class="px-5 py-3">Motivo</th>
                             <th class="px-5 py-3">Veterinario</th>
-                                                            @php
-                                    $numero = preg_replace('/\D/', '', $cita['telefono']);
-                                    $mensaje = "Hola {$cita['cliente']}, le recordamos la cita de {$cita['mascota']} el "
-                                        . $fecha->isoFormat('dddd D [de] MMMM') . " a las {$cita['hora']} en Agro-Veterinaria La Mascota.";
-                                @endphp
-                                <td class="whitespace-nowrap px-5 py-3">
-                                    <div class="flex justify-end gap-2">
-                                        <a href="tel:{{ $numero }}" class="btn-secundario">Llamar</a>
-                                        <a href="https://wa.me/503{{ $numero }}?text={{ rawurlencode($mensaje) }}"
-                                            target="_blank" rel="noopener" class="btn-primario">WhatsApp</a>
-                                    </div>
-                                </td>
                             <th class="px-5 py-3 text-right">Contactar</th>
                         </tr>
                     </thead>
 
                     <tbody class="divide-y divide-gray-100">
                         @foreach ($recordatorios as $cita)
+                            @php
+                                $numero = preg_replace('/\D/', '', $cita['telefono']);
+                                $mensaje = "Hola {$cita['cliente']}, le recordamos la cita de {$cita['mascota']} el "
+                                    . $fecha->isoFormat('dddd D [de] MMMM') . " a las {$cita['hora']} en Agro-Veterinaria La Mascota.";
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="whitespace-nowrap px-5 py-3 font-medium text-gray-800">{{ $cita['hora'] }}</td>
                                 <td class="px-5 py-3">
@@ -63,6 +56,13 @@
                                 <td class="whitespace-nowrap px-5 py-3 text-gray-800">{{ $cita['telefono'] }}</td>
                                 <td class="px-5 py-3 text-gray-600">{{ $cita['motivo'] }}</td>
                                 <td class="px-5 py-3 text-gray-600">{{ $cita['veterinario'] }}</td>
+                                <td class="whitespace-nowrap px-5 py-3">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="tel:{{ $numero }}" class="btn-secundario">Llamar</a>
+                                        <a href="https://wa.me/503{{ $numero }}?text={{ rawurlencode($mensaje) }}"
+                                            target="_blank" rel="noopener" class="btn-primario">WhatsApp</a>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
