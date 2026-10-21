@@ -29,7 +29,7 @@ class CitaFactory extends Factory
             ->inRandomOrder()
             ->value('id');
 
-        if (!$mascotaId || !$veterinarioId) {
+        if (! $mascotaId || ! $veterinarioId) {
             throw new RuntimeException(
                 'Se necesita una mascota y un veterinario activo.'
             );
@@ -37,9 +37,9 @@ class CitaFactory extends Factory
 
         return [
             'mascota_id' => $mascotaId,
-            'usuario_id' => $veterinarioId,
+            'veterinario_id' => $veterinarioId,
 
-            'fecha_hora' => fake()->dateTimeBetween(
+            'fecha_cita' => fake()->dateTimeBetween(
                 '-1 month',
                 '+1 month'
             ),
@@ -64,11 +64,11 @@ class CitaFactory extends Factory
     public function pasada(): static
     {
         return $this->state(fn () => [
-            'fecha_hora' => fake()->dateTimeBetween(
+            'fecha_cita' => fake()->dateTimeBetween(
                 '-3 months',
                 '-1 day'
             ),
-            'estado' => 'completada',
+            'estado' => 'atendida',
         ]);
     }
 
@@ -78,7 +78,7 @@ class CitaFactory extends Factory
     public function futura(): static
     {
         return $this->state(fn () => [
-            'fecha_hora' => fake()->dateTimeBetween(
+            'fecha_cita' => fake()->dateTimeBetween(
                 '+1 day',
                 '+3 months'
             ),
@@ -86,4 +86,3 @@ class CitaFactory extends Factory
         ]);
     }
 }
-

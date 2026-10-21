@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cita extends Model
 {
@@ -15,15 +15,15 @@ class Cita extends Model
 
     protected $fillable = [
         'mascota_id',
-        'usuario_id',
-        'fecha_hora',
+        'veterinario_id',
+        'fecha_cita',
         'estado',
         'motivo',
         'observaciones',
     ];
 
     protected $casts = [
-        'fecha_hora' => 'datetime',
+        'fecha_cita' => 'datetime',
     ];
 
     /**
@@ -44,7 +44,7 @@ class Cita extends Model
     {
         return $this->belongsTo(
             User::class,
-            'usuario_id'
+            'veterinario_id'
         );
     }
 
@@ -53,7 +53,7 @@ class Cita extends Model
      */
     public function scopePasadas(Builder $query): void
     {
-        $query->where('fecha_hora', '<', now());
+        $query->where('fecha_cita', '<', now());
     }
 
     /**
@@ -61,7 +61,7 @@ class Cita extends Model
      */
     public function scopeFuturas(Builder $query): void
     {
-        $query->where('fecha_hora', '>', now());
+        $query->where('fecha_cita', '>', now());
     }
 
     /**
@@ -71,7 +71,7 @@ class Cita extends Model
         Builder $query,
         string $fecha
     ): void {
-        $query->whereDate('fecha_hora', $fecha);
+        $query->whereDate('fecha_cita', $fecha);
     }
 
     /**
@@ -82,7 +82,7 @@ class Cita extends Model
         string $inicio,
         string $fin
     ): void {
-        $query->whereBetween('fecha_hora', [
+        $query->whereBetween('fecha_cita', [
             $inicio,
             $fin,
         ]);

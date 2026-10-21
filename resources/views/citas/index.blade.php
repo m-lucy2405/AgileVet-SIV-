@@ -127,8 +127,8 @@
                 </div>
 
                 <div>
-                    <label for="usuario_id" class="etiqueta">Veterinario</label>
-                    <select id="usuario_id" name="usuario_id" class="campo" required>
+                    <label for="veterinario_id" class="etiqueta">Veterinario</label>
+                    <select id="veterinario_id" name="veterinario_id" class="campo" required>
                         <option value="">Selecciona un veterinario</option>
                         @foreach ($veterinarios ?? [] as $veterinario)
                             <option value="{{ $veterinario['id'] }}">{{ $veterinario['nombre'] }}</option>
@@ -137,8 +137,8 @@
                 </div>
 
                 <div>
-                    <label for="fecha_hora" class="etiqueta">Fecha y hora</label>
-                    <input type="datetime-local" id="fecha_hora" name="fecha_hora" class="campo" step="1800" required>
+                    <label for="fecha_cita" class="etiqueta">Fecha y hora</label>
+                    <input type="datetime-local" id="fecha_cita" name="fecha_cita" class="campo" step="1800" required>
                 </div>
 
                 <div>

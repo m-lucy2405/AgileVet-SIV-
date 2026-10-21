@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CitaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +21,12 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
-    Route::view('/citas', 'citas.index')->name('citas.index');
+    Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
+    Route::post('/citas', [CitaController::class, 'store'])->name('citas.store');
+    Route::put('/citas/{cita}', [CitaController::class, 'update'])->name('citas.update');
+    Route::patch('/citas/{cita}/estado', [CitaController::class, 'changeStatus'])
+        ->name('citas.estado');
+    Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
