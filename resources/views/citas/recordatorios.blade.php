@@ -35,6 +35,19 @@
                             <th class="px-5 py-3">Teléfono</th>
                             <th class="px-5 py-3">Motivo</th>
                             <th class="px-5 py-3">Veterinario</th>
+                                                            @php
+                                    $numero = preg_replace('/\D/', '', $cita['telefono']);
+                                    $mensaje = "Hola {$cita['cliente']}, le recordamos la cita de {$cita['mascota']} el "
+                                        . $fecha->isoFormat('dddd D [de] MMMM') . " a las {$cita['hora']} en Agro-Veterinaria La Mascota.";
+                                @endphp
+                                <td class="whitespace-nowrap px-5 py-3">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="tel:{{ $numero }}" class="btn-secundario">Llamar</a>
+                                        <a href="https://wa.me/503{{ $numero }}?text={{ rawurlencode($mensaje) }}"
+                                            target="_blank" rel="noopener" class="btn-primario">WhatsApp</a>
+                                    </div>
+                                </td>
+                            <th class="px-5 py-3 text-right">Contactar</th>
                         </tr>
                     </thead>
 
