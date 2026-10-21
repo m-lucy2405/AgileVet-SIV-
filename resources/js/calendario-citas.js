@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const textoAyuda = document.getElementById('fecha-seleccionada');
     const modal = document.getElementById('modal-cita');
+    const modalNueva = document.getElementById('modal-nueva-cita');
+    const ventanas = [modal, modalNueva];
 
     const formatoFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     const formatoHora = { hour: '2-digit', minute: '2-digit' };
@@ -61,9 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         modal.querySelector('[data-campo="estado"]').style.backgroundColor = evento.backgroundColor;
 
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
+        abrirVentana(modal);
         modal.querySelector('[data-cerrar-modal]').focus();
     };
 
@@ -104,24 +104,37 @@ document.addEventListener('DOMContentLoaded', () => {
         el.title = `${timeText} · ${mascota} · ${motivo}\nPropietario: ${cliente}`;
     };
 
-    // Cierra la ventana de la cita
-    const cerrarModal = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        // Abre o cierra cualquiera de las ventanas emergentes
+    const abrirVentana = (ventana) => {
+        ventana.classList.remove('hidden');
+        ventana.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const cerrarVentana = (ventana) => {
+        ventana.classList.add('hidden');
+        ventana.classList.remove('flex');
         document.body.classList.remove('overflow-hidden');
     };
 
-    // Se cierra con la X, al dar clic afuera o con la tecla Esc
-    modal.querySelector('[data-cerrar-modal]').addEventListener('click', cerrarModal);
+    // Se cierran con la X, con Cancelar, al dar clic afuera o con Esc
+    ventanas.forEach((ventana) => {
+        ventana.querySelectorAll('[data-cerrar-modal]').forEach((boton) => {
+            boton.addEventListener('click', () => cerrarVentana(ventana));
+        });
 
-    modal.addEventListener('click', (evento) => {
-        if (evento.target === modal) cerrarModal();
+        ventana.addEventListener('click', (evento) => {
+            if (evento.target === ventana) cerrarVentana(ventana);
+        });
     });
 
     document.addEventListener('keydown', (evento) => {
-        if (evento.key === 'Escape' && !modal.classList.contains('hidden')) cerrarModal();
+        if (evento.key !== 'Escape') return;
+        ventanas.forEach((ventana) => {
+            if (!ventana.classList.contains('hidden')) cerrarVentana(ventana);
+        });
     });
-
+    
     // Detecta el día u hora elegida (aquí se abrirá el modal de nueva cita)
     const seleccionarFecha = (info) => {
         const fecha = info.date.toLocaleDateString('es-SV', formatoFecha);
