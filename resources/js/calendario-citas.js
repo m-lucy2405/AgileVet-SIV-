@@ -43,6 +43,43 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('[data-cerrar-modal]').focus();
     };
 
+        // Arma el texto de cada cita según la vista del calendario
+    const dibujarCita = ({ event, timeText, view }) => {
+        const { mascota, motivo } = event.extendedProps;
+
+        const crearLinea = (texto, clase) => {
+            const linea = document.createElement('div');
+            linea.className = clase;
+            linea.textContent = texto;
+            return linea;
+        };
+
+        if (view.type === 'dayGridMonth') {
+            const contenedor = document.createElement('div');
+            contenedor.className = 'cita-mes';
+
+            const punto = document.createElement('span');
+            punto.className = 'cita-punto';
+            punto.style.backgroundColor = event.backgroundColor;
+
+            contenedor.append(punto, crearLinea(`${timeText} ${mascota}`, 'cita-texto'));
+            return { domNodes: [contenedor] };
+        }
+
+        return {
+            domNodes: [
+                crearLinea(timeText, 'cita-hora'),
+                crearLinea(`${mascota} · ${motivo}`, 'cita-texto'),
+            ],
+        };
+    };
+
+    // Texto completo que aparece al pasar el mouse sobre una cita
+    const agregarDescripcion = ({ event, el, timeText }) => {
+        const { mascota, motivo, cliente } = event.extendedProps;
+        el.title = `${timeText} · ${mascota} · ${motivo}\nPropietario: ${cliente}`;
+    };
+
     // Cierra la ventana de la cita
     const cerrarModal = () => {
         modal.classList.add('hidden');
@@ -89,6 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         nowIndicator: true,
         height: 'auto',
         events: citas,
+        eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: false },
+        eventContent: dibujarCita,
+        eventDidMount: agregarDescripcion,
+        dayMaxEvents: 2,
           dateClick: seleccionarFecha,
         eventClick: (info) => mostrarCita(info.event),
         windowResize: () => {
