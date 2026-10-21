@@ -110,7 +110,7 @@
                 </button>
             </div>
 
-            <form id="form-nueva-cita" action="#" method="POST" class="space-y-4 px-5 py-4">
+             <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
                 @csrf
                 <input type="hidden" name="estado" value="pendiente">
 
@@ -119,8 +119,7 @@
                     <select id="mascota_id" name="mascota_id" class="campo" required>
                         <option value="">Selecciona una mascota</option>
                         @foreach ($mascotas ?? [] as $mascota)
-                            <option value="{{ $mascota['id'] }}" data-nombre="{{ $mascota['nombre'] }}"
-                                data-cliente="{{ $mascota['cliente'] }}" data-telefono="{{ $mascota['telefono'] }}">
+                            <option value="{{ $mascota['id'] }}">  
                                 {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
                             </option>
                         @endforeach
