@@ -44,6 +44,10 @@
                     Haz clic en un horario del calendario.
                 </p>
             </div>
+            {{-- Acceso a los recordatorios del día siguiente --}}
+            <a href="{{ route('citas.recordatorios') }}" class="btn-secundario block w-full text-center">
+                Ver recordatorios de mañana
+            </a>
          </aside>
     </div>
 
