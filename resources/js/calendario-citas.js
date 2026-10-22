@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             backgroundColor: estado.color,
             borderColor: estado.color,
             extendedProps: {
+                veterinarioId: cita.veterinario_id,
                 mascota: cita.mascota,
                 motivo: cita.motivo,
                 cliente: cita.cliente,
@@ -137,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
         const formulario = document.getElementById('form-nueva-cita');
-    const campoFecha = formulario.elements.fecha_hora;
+    const campoFecha = formulario.elements.fecha_cita;
     const sumarMinutos = (fecha, minutos) => new Date(fecha.getTime() + minutos * 60000);
 
     // Pasa una fecha al formato del input datetime-local (AAAA-MM-DDTHH:MM)
@@ -147,11 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Revisa si ya hay una cita en ese horario (las canceladas no cuentan)
-    const horarioOcupado = (inicio) => {
+    const horarioOcupado = (inicio, veterinarioId) => {
         const fin = sumarMinutos(inicio, DURACION_CITA_MINUTOS);
 
         return calendario.getEvents().some((cita) => {
-            if (cita.extendedProps.estado === estados.cancelada.nombre) return false;
+            if (
+                cita.extendedProps.estado === estados.cancelada.nombre
+                || Number(cita.extendedProps.veterinarioId) !== Number(veterinarioId)
+            ) return false;
             const finCita = cita.end ?? sumarMinutos(cita.start, DURACION_CITA_MINUTOS);
             return inicio < finCita && fin > cita.start;
         });
@@ -178,11 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!DIAS_ATENCION.includes(inicio.getDay()) || horaTexto < HORA_APERTURA || horaTexto >= HORA_CIERRE) {
             textoAyuda.textContent = 'La clínica no atiende en ese horario.';
-            return;
-        }
-
-        if (horarioOcupado(inicio)) {
-            textoAyuda.textContent = `Ya hay una cita el ${fecha} a las ${hora}.`;
             return;
         }
 
@@ -228,4 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     calendario.render();
+
+    formulario.addEventListener('submit', (evento) => {
+        const veterinarioId = Number(formulario.elements.veterinario_id.value);
+
+        if (!horarioOcupado(new Date(campoFecha.value), veterinarioId)) return;
+
+        evento.preventDefault();
+        textoAyuda.textContent = 'El veterinario seleccionado ya tiene una cita en ese horario.';
+    });
 });

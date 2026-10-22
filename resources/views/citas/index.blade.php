@@ -11,14 +11,12 @@
             'cancelada' => ['nombre' => 'Cancelada', 'color' => '#dc2626'],
             'no_asistio' => ['nombre' => 'No asistió', 'color' => '#6b7280'],
         ];
-
-       
     @endphp
 
     <div class="grid gap-6 xl:grid-cols-[1fr_18rem]">
 
         {{-- Calendario --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             {{-- $citas lo envía CitaController. Cada cita: id, start, end, estado, mascota, motivo, cliente, telefono, veterinario --}}
             <div id="calendario-citas" data-citas='@json($citas ?? [])' data-estados='@json($estados)'></div>
         </div>
@@ -44,11 +42,12 @@
                     Haz clic en un horario del calendario.
                 </p>
             </div>
+
             {{-- Acceso a los recordatorios del día siguiente --}}
             <a href="{{ route('citas.recordatorios') }}" class="btn-secundario block w-full text-center">
                 Ver recordatorios de mañana
             </a>
-         </aside>
+        </aside>
     </div>
 
     {{-- Ventana emergente con el detalle de la cita --}}
@@ -94,7 +93,7 @@
         </div>
     </div>
 
-        {{-- Ventana emergente para registrar una cita --}}
+    {{-- Ventana emergente para registrar una cita --}}
     {{-- $mascotas (id, nombre, cliente, telefono) y $veterinarios (id, nombre) los envía CitaController --}}
     <div id="modal-nueva-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
         role="dialog" aria-modal="true" aria-labelledby="modal-nueva-cita-titulo">
@@ -114,16 +113,15 @@
                 </button>
             </div>
 
-             <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
+            <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
                 @csrf
-                <input type="hidden" name="estado" value="pendiente">
 
                 <div>
                     <label for="mascota_id" class="etiqueta">Mascota</label>
                     <select id="mascota_id" name="mascota_id" class="campo" required>
                         <option value="">Selecciona una mascota</option>
                         @foreach ($mascotas ?? [] as $mascota)
-                            <option value="{{ $mascota['id'] }}">  
+                            <option value="{{ $mascota['id'] }}">
                                 {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
                             </option>
                         @endforeach
@@ -131,8 +129,8 @@
                 </div>
 
                 <div>
-                    <label for="usuario_id" class="etiqueta">Veterinario</label>
-                    <select id="usuario_id" name="usuario_id" class="campo" required>
+                    <label for="veterinario_id" class="etiqueta">Veterinario</label>
+                    <select id="veterinario_id" name="veterinario_id" class="campo" required>
                         <option value="">Selecciona un veterinario</option>
                         @foreach ($veterinarios ?? [] as $veterinario)
                             <option value="{{ $veterinario['id'] }}">{{ $veterinario['nombre'] }}</option>
@@ -141,8 +139,8 @@
                 </div>
 
                 <div>
-                    <label for="fecha_hora" class="etiqueta">Fecha y hora</label>
-                    <input type="datetime-local" id="fecha_hora" name="fecha_hora" class="campo" step="1800" required>
+                    <label for="fecha_cita" class="etiqueta">Fecha y hora</label>
+                    <input type="datetime-local" id="fecha_cita" name="fecha_cita" class="campo" step="1800" required>
                 </div>
 
                 <div>

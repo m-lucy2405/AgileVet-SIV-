@@ -19,16 +19,16 @@ return new class extends Migration
 
             // Relación con la tabla mascotas
             $table->foreignId('mascota_id')
-                  ->constrained('mascotas')
-                  ->restrictOnDelete();
+                ->constrained('mascotas')
+                ->restrictOnDelete();
 
             // Relación con la tabla users (veterinario)
-            $table->foreignId('usuario_id')
-                  ->constrained('users')
-                  ->restrictOnDelete();
+            $table->foreignId('veterinario_id')
+                ->constrained('users')
+                ->restrictOnDelete();
 
             // Fecha y hora programada de la cita
-            $table->dateTime('fecha_hora');
+            $table->dateTime('fecha_cita');
 
             // Estado actual de la cita
             $table->string('estado', 20);
@@ -38,7 +38,7 @@ return new class extends Migration
 
             // Observaciones adicionales
             $table->text('observaciones')
-                  ->nullable();
+                ->nullable();
 
             // Fechas de creación y actualización
             $table->timestamps();
@@ -53,6 +53,3 @@ return new class extends Migration
         Schema::dropIfExists('citas');
     }
 };
-
-
-
