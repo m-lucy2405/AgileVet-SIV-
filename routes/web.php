@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
     Route::view('/citas', 'citas.index')->name('citas.index');
+    Route::view('/citas/recordatorios', 'citas.recordatorios')->name('citas.recordatorios');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
