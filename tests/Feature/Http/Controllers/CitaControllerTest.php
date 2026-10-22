@@ -386,6 +386,140 @@ class CitaControllerTest extends TestCase
     }
 
     /**
+     * Devuelve eventos del calendario con campos y fechas ISO 8601.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_calendar_events_returns_fullcalendar_json(): void
+    {
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $cita = $this->createCita($veterinarian, $mascota, '2026-10-22 10:00:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->getJson(route('citas.calendario.eventos'));
+
+        $response->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $cita->id)
+            ->assertJsonPath('0.title', 'Luna - Consulta de prueba')
+            ->assertJsonPath('0.start', '2026-10-22T10:00:00+00:00')
+            ->assertJsonPath('0.end', '2026-10-22T10:30:00+00:00')
+            ->assertJsonPath('0.status', 'pendiente');
+    }
+
+    /**
+     * Devuelve únicamente recordatorios pendientes del día consultado.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_daily_reminders_filters_by_date_and_pending_status(): void
+    {
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $cita = $this->createCita($veterinarian, $mascota, '2026-10-22 10:00:00');
+        $this->createCita(
+            $veterinarian,
+            $mascota,
+            '2026-10-22 11:00:00',
+            'cancelada',
+        );
+        $this->createCita($veterinarian, $mascota, '2026-10-23 10:00:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->getJson(route('citas.recordatorios.datos', ['fecha' => '2026-10-22']));
+
+        $response->assertOk()
+            ->assertJsonPath('fecha', '2026-10-22')
+            ->assertJsonCount(1, 'recordatorios')
+            ->assertJsonPath('recordatorios.0.id', $cita->id)
+            ->assertJsonPath('recordatorios.0.fecha_hora', '2026-10-22 10:00:00')
+            ->assertJsonPath('recordatorios.0.hora', '10:00')
+            ->assertJsonPath('recordatorios.0.cliente', 'Cliente de prueba')
+            ->assertJsonPath('recordatorios.0.telefono', '70000000');
+    }
+
+    /**
+     * Usa el día siguiente como fecha predeterminada para los recordatorios.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_daily_reminders_default_to_tomorrow(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($veterinarian, $mascota, '2026-10-21 10:00:00');
+        $this->createCita($veterinarian, $mascota, '2026-10-22 10:00:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->getJson(route('citas.recordatorios.datos'));
+
+        $response->assertOk()
+            ->assertJsonPath('fecha', '2026-10-21')
+            ->assertJsonCount(1, 'recordatorios');
+    }
+
+    /**
+     * Rechaza fechas de recordatorios con un formato distinto a Y-m-d.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_daily_reminders_reject_invalid_date_format(): void
+    {
+        $veterinarian = $this->createVeterinarian();
+
+        $response = $this->actingAs($veterinarian)
+            ->getJson(route('citas.recordatorios.datos', ['fecha' => '22-10-2026']));
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors('fecha');
+    }
+
+    /**
+     * Requiere autenticación para consultar los endpoints JSON de citas.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_json_appointment_endpoints_require_authentication(): void
+    {
+        $this->getJson(route('citas.calendario.eventos'))->assertUnauthorized();
+        $this->getJson(route('citas.recordatorios.datos'))->assertUnauthorized();
+    }
+
+    /**
+     * Renderiza la página con las citas pendientes de la fecha seleccionada.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_reminders_page_renders_appointments_for_selected_date(): void
+    {
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($veterinarian, $mascota, '2026-10-22 10:00:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->get(route('citas.recordatorios', ['fecha' => '2026-10-22']));
+
+        $response->assertOk()
+            ->assertSee('Luna')
+            ->assertSee('Cliente de prueba')
+            ->assertSee('70000000');
+    }
+
+    /**
      * Crea un usuario activo con el rol de veterinario para la prueba actual.
      *
      * @return User Veterinario autenticable persistido en la base de pruebas.
