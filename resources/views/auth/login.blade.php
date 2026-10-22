@@ -4,14 +4,18 @@
 
 @section('contenido')
     <div class="w-full max-w-md">
-        <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div class="rounded-2xl border border-primario-500/20 bg-white p-8 shadow-sm">
 
-            {{-- logo oficial de la veterinaria --}}
-            <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-primario-300 bg-primario-50 text-xs font-medium text-primario-700">
-                Logo
+            {{-- Logo: reemplazar "LM" por la imagen oficial cuando esté disponible --}}
+            <div class="mx-auto mb-6 w-20 rounded-2xl bg-gradient-to-br from-primario-500 to-acento-500 p-[1.5px] shadow-[0_0_30px_rgb(34_211_238/0.25)]">
+                <div class="flex h-20 items-center justify-center rounded-2xl bg-[#0d1528] text-2xl font-bold tracking-wider text-primario-300">
+                    LM
+                </div>
             </div>
 
-            <h1 class="text-center text-xl font-semibold text-gray-800">Agro-Veterinaria La Mascota</h1>
+            <h1 class="bg-gradient-to-r from-gray-900 to-primario-200 bg-clip-text text-center text-xl font-semibold text-transparent">
+                Agro-Veterinaria La Mascota
+            </h1>
             <p class="mt-1 text-center text-sm text-gray-500">Ingresa tus credenciales para continuar</p>
 
             <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
@@ -36,7 +40,7 @@
                 </div>
 
                 <label class="flex items-center gap-2 text-sm text-gray-600">
-                    <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 accent-primario-600">
+                    <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 accent-primario-500">
                     Recordarme
                 </label>
 

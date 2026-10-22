@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0B1120">
     <title>@yield('titulo', 'Inicio') | Agro-Veterinaria La Mascota</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -11,8 +12,7 @@
 
     @include('partials.sidebar')
 
-    
-    <div id="overlay" class="fixed inset-0 z-30 hidden bg-black/40 lg:hidden"></div>
+    <div id="overlay" class="fixed inset-0 z-30 hidden bg-black/60 backdrop-blur-sm lg:hidden"></div>
 
     <div class="flex min-h-screen flex-col lg:pl-64">
         @include('partials.navbar')
