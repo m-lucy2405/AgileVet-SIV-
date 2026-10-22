@@ -11,8 +11,6 @@
             'cancelada' => ['nombre' => 'Cancelada', 'color' => '#dc2626'],
             'no_asistio' => ['nombre' => 'No asistió', 'color' => '#6b7280'],
         ];
-
-       
     @endphp
 
     <div class="grid gap-6 xl:grid-cols-[1fr_18rem]">
@@ -44,11 +42,12 @@
                     Haz clic en un horario del calendario.
                 </p>
             </div>
+
             {{-- Acceso a los recordatorios del día siguiente --}}
             <a href="{{ route('citas.recordatorios') }}" class="btn-secundario block w-full text-center">
                 Ver recordatorios de mañana
             </a>
-         </aside>
+        </aside>
     </div>
 
     {{-- Ventana emergente con el detalle de la cita --}}
@@ -94,7 +93,7 @@
         </div>
     </div>
 
-        {{-- Ventana emergente para registrar una cita --}}
+    {{-- Ventana emergente para registrar una cita --}}
     {{-- $mascotas (id, nombre, cliente, telefono) y $veterinarios (id, nombre) los envía CitaController --}}
     <div id="modal-nueva-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
         role="dialog" aria-modal="true" aria-labelledby="modal-nueva-cita-titulo">
@@ -114,16 +113,15 @@
                 </button>
             </div>
 
-             <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
+            <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
                 @csrf
-                <input type="hidden" name="estado" value="pendiente">
 
                 <div>
                     <label for="mascota_id" class="etiqueta">Mascota</label>
                     <select id="mascota_id" name="mascota_id" class="campo" required>
                         <option value="">Selecciona una mascota</option>
                         @foreach ($mascotas ?? [] as $mascota)
-                            <option value="{{ $mascota['id'] }}">  
+                            <option value="{{ $mascota['id'] }}">
                                 {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
                             </option>
                         @endforeach
