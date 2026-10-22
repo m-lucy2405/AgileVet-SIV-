@@ -42,6 +42,66 @@ class CitaControllerTest extends TestCase
     }
 
     /**
+     * Rechaza una cita que comienza antes del fin de una cita existente.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_store_rejects_overlap_when_existing_appointment_starts_first(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($veterinarian, $mascota, '2026-10-22 09:45:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->post(
+                route('citas.store'),
+                $this->appointmentPayload(
+                    $veterinarian,
+                    $mascota,
+                    '2026-10-22T10:00',
+                ),
+            );
+
+        $response->assertSessionHasErrors([
+            'fecha_cita' => 'El veterinario ya tiene una cita en ese horario.',
+        ]);
+        $this->assertDatabaseCount('citas', 1);
+    }
+
+    /**
+     * Rechaza una cita que comienza dentro del intervalo de una cita existente.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_store_rejects_overlap_when_new_appointment_starts_first(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
+        $veterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($veterinarian, $mascota, '2026-10-22 10:15:00');
+
+        $response = $this->actingAs($veterinarian)
+            ->post(
+                route('citas.store'),
+                $this->appointmentPayload(
+                    $veterinarian,
+                    $mascota,
+                    '2026-10-22T10:00',
+                ),
+            );
+
+        $response->assertSessionHasErrors([
+            'fecha_cita' => 'El veterinario ya tiene una cita en ese horario.',
+        ]);
+        $this->assertDatabaseCount('citas', 1);
+    }
+
+    /**
      * Permite reservar la misma hora para veterinarios diferentes.
      *
      * @return void No retorna un valor.

@@ -343,19 +343,10 @@ class CitaController extends Controller
         $conflictingAppointments = Cita::query()
             ->where('veterinario_id', $veterinarianId)
             ->where('estado', '!=', 'cancelada')
-            ->where(
-                'fecha_cita',
-                '<',
-                $appointmentStart
-                    ->addMinutes(self::DURACION_CITA_MINUTOS)
-                    ->format('Y-m-d H:i:s'),
-            )
-            ->where(
-                'fecha_cita',
-                '>',
-                $appointmentStart
-                    ->subMinutes(self::DURACION_CITA_MINUTOS)
-                    ->format('Y-m-d H:i:s'),
+            ->overlappingInterval(
+                $appointmentStart,
+                $appointmentStart->addMinutes(self::DURACION_CITA_MINUTOS),
+                self::DURACION_CITA_MINUTOS,
             );
 
         if ($exceptAppointmentId !== null) {
