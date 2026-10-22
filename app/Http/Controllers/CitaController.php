@@ -9,8 +9,10 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
@@ -101,6 +103,128 @@ class CitaController extends Controller
             'mascotas' => $mascotas,
             'veterinarios' => $veterinarios,
         ]);
+    }
+
+    /**
+     * Devuelve las citas con el formato de eventos requerido por el calendario.
+     *
+     * @return JsonResponse Eventos con identificador, título, intervalo y estado.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function calendarEvents(): JsonResponse
+    {
+        $events = Cita::query()
+            ->with('mascota:id,nombre')
+            ->orderBy('fecha_cita')
+            ->get()
+            ->map(fn (Cita $cita): array => [
+                'id' => $cita->id,
+                'title' => "{$cita->mascota->nombre} - {$cita->motivo}",
+                'start' => $cita->fecha_cita->toIso8601String(),
+                'end' => $cita->fecha_cita
+                    ->copy()
+                    ->addMinutes(self::DURACION_CITA_MINUTOS)
+                    ->toIso8601String(),
+                'status' => $cita->estado,
+            ]);
+
+        return response()->json($events);
+    }
+
+    /**
+     * Devuelve los recordatorios pendientes para una fecha determinada.
+     *
+     * @param  Request  $request  Petición con la fecha opcional en formato Y-m-d.
+     * @return JsonResponse Fecha consultada y lista de recordatorios.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function dailyReminders(Request $request): JsonResponse
+    {
+        $date = $this->reminderDate($request);
+
+        return response()->json([
+            'fecha' => $date->toDateString(),
+            'recordatorios' => $this->remindersForDate($date),
+        ]);
+    }
+
+    /**
+     * Renderiza la página de recordatorios con las citas del día solicitado.
+     *
+     * @param  Request  $request  Petición con la fecha opcional en formato Y-m-d.
+     * @return View Página de recordatorios con las citas pendientes.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function remindersPage(Request $request): View
+    {
+        $date = $this->reminderDate($request);
+
+        return view('citas.recordatorios', [
+            'fecha' => $date,
+            'recordatorios' => $this->remindersForDate($date),
+        ]);
+    }
+
+    /**
+     * Obtiene la fecha solicitada o, por defecto, el día siguiente.
+     *
+     * @param  Request  $request  Petición que puede incluir la fecha Y-m-d.
+     * @return CarbonImmutable Fecha validada en la zona horaria de la aplicación.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    private function reminderDate(Request $request): CarbonImmutable
+    {
+        $validated = $request->validate([
+            'fecha' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        return CarbonImmutable::parse(
+            $validated['fecha'] ?? now()->addDay()->toDateString(),
+            (string) config('app.timezone'),
+        );
+    }
+
+    /**
+     * Consulta y prepara los datos operativos de las citas pendientes para un día.
+     *
+     * @param  CarbonImmutable  $date  Día cuyas citas se incluirán en los recordatorios.
+     * @return Collection<int, array{
+     *     id: int,
+     *     fecha_hora: string,
+     *     hora: string,
+     *     mascota: string,
+     *     especie: string,
+     *     cliente: string,
+     *     telefono: string,
+     *     motivo: string,
+     *     veterinario: string
+     * }> Recordatorios ordenados por hora.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    private function remindersForDate(CarbonImmutable $date): Collection
+    {
+        return Cita::query()
+            ->with(['mascota.cliente', 'veterinario'])
+            ->whereDate('fecha_cita', $date->toDateString())
+            ->where('estado', 'pendiente')
+            ->orderBy('fecha_cita')
+            ->get()
+            ->map(fn (Cita $cita): array => [
+                'id' => $cita->id,
+                'fecha_hora' => $cita->fecha_cita->format('Y-m-d H:i:s'),
+                'hora' => $cita->fecha_cita->format('H:i'),
+                'mascota' => $cita->mascota->nombre,
+                'especie' => $cita->mascota->especie,
+                'cliente' => $cita->mascota->cliente->nombre,
+                'telefono' => $cita->mascota->cliente->telefono,
+                'motivo' => $cita->motivo,
+                'veterinario' => $cita->veterinario->nombre,
+            ]);
     }
 
     /**

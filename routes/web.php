@@ -22,12 +22,17 @@ Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
     Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
+    Route::get('/citas/calendario/eventos', [CitaController::class, 'calendarEvents'])
+        ->name('citas.calendario.eventos');
+    Route::get('/citas/recordatorios/datos', [CitaController::class, 'dailyReminders'])
+        ->name('citas.recordatorios.datos');
     Route::post('/citas', [CitaController::class, 'store'])->name('citas.store');
     Route::put('/citas/{cita}', [CitaController::class, 'update'])->name('citas.update');
     Route::patch('/citas/{cita}/estado', [CitaController::class, 'changeStatus'])
         ->name('citas.estado');
     Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
-    Route::view('/citas/recordatorios', 'citas.recordatorios')->name('citas.recordatorios');
+    Route::get('/citas/recordatorios', [CitaController::class, 'remindersPage'])
+        ->name('citas.recordatorios');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
