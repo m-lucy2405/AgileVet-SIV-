@@ -16,7 +16,7 @@
     <div class="grid gap-6 xl:grid-cols-[1fr_18rem]">
 
         {{-- Calendario --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             {{-- $citas lo envía CitaController. Cada cita: id, start, end, estado, mascota, motivo, cliente, telefono, veterinario --}}
             <div id="calendario-citas" data-citas='@json($citas ?? [])' data-estados='@json($estados)'></div>
         </div>
