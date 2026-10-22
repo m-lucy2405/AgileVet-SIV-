@@ -147,7 +147,7 @@ body {
 |--------------------------------------------------------------------------
 */
 #calendario-citas {
-    --fc-page-bg-color: transparent;
+    --fc-page-bg-color: #40554d;
     --fc-neutral-bg-color: #3a4e46;
     --fc-border-color: #52685f;
     --fc-button-text-color: #eef4f0;
@@ -246,4 +246,18 @@ body {
 /* Filas de horas más altas para que quepan dos líneas */
 #calendario-citas .fc-timegrid-slot {
     height: 2.25rem;
+}
+
+/* Ventana "+N más" del calendario: fondo sólido para que no se vean las citas de atrás */
+#calendario-citas .fc-popover {
+    border: 1px solid #5f766c;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+}
+
+#calendario-citas .fc-popover-header {
+    padding: 0.5rem 0.75rem;
+    color: #f6faf8;
+    font-weight: 600;
 }
