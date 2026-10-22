@@ -5,20 +5,20 @@
 @section('contenido')
     @php
         $coloresRol = [
-            'Administrador' => 'bg-acento-500/15 text-acento-600',
-            'Veterinario' => 'bg-primario-100 text-primario-700',
-            'Recepcionista' => 'bg-gray-100 text-gray-700',
+            'Administrador' => 'bg-acento-500/15 text-[#C4B5FD] ring-1 ring-acento-500/30',
+            'Veterinario' => 'bg-primario-500/15 text-primario-300 ring-1 ring-primario-500/30',
+            'Recepcionista' => 'bg-gray-100 text-gray-700 ring-1 ring-gray-300',
         ];
     @endphp
 
     @if (session('status'))
-        <div role="status" class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div role="status" class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
         </div>
     @endif
 
     @if ($errors->has('usuario'))
-        <div role="alert" class="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div role="alert" class="mb-4 rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600">
             {{ $errors->first('usuario') }}
         </div>
     @endif
@@ -60,10 +60,10 @@
 
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($usuarios as $usuario)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="transition hover:bg-gray-50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primario-100 text-xs font-semibold text-primario-700">
+                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primario-500/15 text-xs font-semibold text-primario-300 ring-1 ring-primario-500/30">
                                         {{ mb_substr($usuario->nombre, 0, 1) }}
                                     </span>
                                     <span class="font-medium text-gray-800">{{ $usuario->nombre }}</span>
@@ -80,8 +80,8 @@
 
                             <td class="px-4 py-3">
                                 @if ($usuario->estado)
-                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-700">
-                                        <span class="h-2 w-2 rounded-full bg-green-500"></span> Activo
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#34D399]">
+                                        <span class="h-2 w-2 rounded-full bg-[#34D399] shadow-[0_0_8px_#34D399]"></span> Activo
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">
@@ -93,7 +93,7 @@
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
                                     <a href="{{ route('usuarios.edit', $usuario) }}"
-                                        class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-700 hover:bg-primario-50">
+                                        class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
                                         Editar
                                     </a>
 
@@ -102,7 +102,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
+                                                class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50">
                                                 Desactivar
                                             </button>
                                         </form>

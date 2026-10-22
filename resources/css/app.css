@@ -3,24 +3,60 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+|--------------------------------------------------------------------------
+| Tema "Bosque" – AgileVet
+|--------------------------------------------------------------------------
+| Verde pino en tonos medios, acento menta y detalles dorados.
+| Los grises están invertidos a propósito: las vistas usan clases como
+| text-gray-800 o border-gray-200, y así todo el sistema cambia de tema
+| sin modificar cada pantalla.
+*/
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-primario-50: #f0fdfa;
-    --color-primario-100: #ccfbf1;
-    --color-primario-200: #99f6e4;
-    --color-primario-300: #5eead4;
-    --color-primario-500: #14b8a6;
-    --color-primario-600: #0d9488;
-    --color-primario-700: #0f766e;
-    --color-primario-800: #115e59;
-    --color-primario-900: #134e4a;
+    /* Superficies */
+    --color-fondo: #34463f;
+    --color-superficie: #40554d;
+    --color-campo: #3a4e46;
 
-    --color-acento-500: #f59e0b;
-    --color-acento-600: #d97706;
+    /* Primario: menta (50-300 claros para texto, 600-900 para fondos) */
+    --color-primario-50: #effaf4;
+    --color-primario-100: #d5f1e3;
+    --color-primario-200: #b8e6cf;
+    --color-primario-300: #a6dcc1;
+    --color-primario-500: #8fd1b0;
+    --color-primario-600: #6fbf98;
+    --color-primario-700: #3f7f63;
+    --color-primario-800: #2f6650;
+    --color-primario-900: #2c3c36;
 
-    --color-fondo: #f8fafc;
+    /* Acento: dorado suave */
+    --color-acento-500: #e2c98a;
+    --color-acento-600: #cdb06a;
+
+    /* Grises invertidos: los números bajos son oscuros y los altos claros */
+    --color-gray-50: #3a4e46;
+    --color-gray-100: #4a5f57;
+    --color-gray-200: #52685f;
+    --color-gray-300: #5f766c;
+    --color-gray-400: #8fa39a;
+    --color-gray-500: #b9cbc3;
+    --color-gray-600: #c9d8d1;
+    --color-gray-700: #dce6e1;
+    --color-gray-800: #eef4f0;
+    --color-gray-900: #f6faf8;
+
+    /* Rojo para errores y asteriscos */
+    --color-red-50: #4a3a3e;
+    --color-red-500: #e8899a;
+    --color-red-600: #f2a0ac;
+
+    /* Verde para mensajes de éxito */
+    --color-green-50: #3a5a4c;
+    --color-green-200: #4e7464;
+    --color-green-800: #c9ebd9;
 }
 
 @layer components {
@@ -29,7 +65,7 @@
     }
 
     .campo {
-        @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-primario-500 focus:outline-none focus:ring-2 focus:ring-primario-200;
+        @apply w-full rounded-lg border border-gray-300 bg-campo px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-primario-500 focus:outline-none focus:ring-2 focus:ring-primario-500/25;
     }
 
     .error-campo {
@@ -37,25 +73,96 @@
     }
 
     .btn-primario {
-        @apply inline-flex items-center justify-center rounded-lg bg-primario-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primario-800 focus:outline-none focus:ring-2 focus:ring-primario-300;
+        @apply inline-flex items-center justify-center rounded-lg bg-primario-500 px-4 py-2 text-sm font-semibold text-[#1e3229] transition hover:bg-primario-300 focus:outline-none focus:ring-2 focus:ring-primario-500/35;
     }
 
     .btn-secundario {
-        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50;
+        @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primario-500 hover:text-primario-300;
     }
 }
 
-/* Calendario de citas (FullCalendar) */
+/*
+|--------------------------------------------------------------------------
+| Ajustes globales (fuera de capas para que tengan prioridad)
+|--------------------------------------------------------------------------
+*/
+:root {
+    color-scheme: dark; /* calendarios y selectores nativos en tono oscuro */
+}
+
+body {
+    color: #eef4f0;
+    background-color: #34463f;
+    background-image:
+        radial-gradient(60rem 30rem at 90% -10%, rgb(226 201 138 / 0.06), transparent 60%),
+        radial-gradient(50rem 30rem at 0% 0%, rgb(143 209 176 / 0.07), transparent 60%);
+    background-attachment: fixed;
+}
+
+/* Las tarjetas blancas pasan a ser paneles verde medio */
+.bg-white {
+    background-color: #40554d;
+}
+
+/* Sombra suave en tarjetas, sin brillos */
+.rounded-xl.border,
+.rounded-2xl.border {
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
+}
+
+/* Logo "LM" del menú: texto oscuro sobre el dorado */
+.bg-acento-500.text-white {
+    color: #2c3c36;
+}
+
+/* Avatar y burbujas claras: tono menta translúcido en lugar de casi blanco */
+.bg-primario-100 {
+    background-color: rgb(143 209 176 / 0.18);
+}
+
+.bg-primario-100.text-primario-700 {
+    color: #a6dcc1;
+}
+
+/* Menú lateral: elemento activo con línea menta */
+#sidebar a.bg-primario-700 {
+    background: linear-gradient(90deg, rgb(143 209 176 / 0.20), rgb(143 209 176 / 0.04));
+    box-shadow: inset 3px 0 0 #8fd1b0;
+    color: #f6faf8;
+}
+
+/* Barras de desplazamiento discretas */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #5f766c transparent;
+}
+
+::selection {
+    background: rgb(143 209 176 / 0.3);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Calendario de citas (FullCalendar)
+|--------------------------------------------------------------------------
+*/
 #calendario-citas {
-    --fc-border-color: #e5e7eb;
-    --fc-button-bg-color: #0f766e;
-    --fc-button-border-color: #0f766e;
-    --fc-button-hover-bg-color: #115e59;
-    --fc-button-hover-border-color: #115e59;
-    --fc-button-active-bg-color: #134e4a;
-    --fc-button-active-border-color: #134e4a;
-    --fc-today-bg-color: #f0fdfa;
-    --fc-now-indicator-color: #f59e0b;
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #3a4e46;
+    --fc-border-color: #52685f;
+    --fc-button-text-color: #eef4f0;
+    --fc-button-bg-color: #4a5f57;
+    --fc-button-border-color: #5f766c;
+    --fc-button-hover-bg-color: #52685f;
+    --fc-button-hover-border-color: #8fd1b0;
+    --fc-button-active-bg-color: #8fd1b0;
+    --fc-button-active-border-color: #8fd1b0;
+    --fc-today-bg-color: rgb(143 209 176 / 0.10);
+    --fc-now-indicator-color: #e2c98a;
+    --fc-highlight-color: rgb(143 209 176 / 0.18);
+    --fc-non-business-color: rgb(0 0 0 / 0.10);
+    --fc-event-text-color: #1e3229;
+    color: #eef4f0;
     font-size: 0.875rem;
 }
 
@@ -67,10 +174,34 @@
 #calendario-citas .fc-toolbar-title {
     font-size: 1.125rem;
     font-weight: 600;
+    color: #f6faf8;
+}
+
+#calendario-citas .fc-button {
+    font-weight: 600;
+    box-shadow: none;
+}
+
+#calendario-citas .fc-button-primary:not(:disabled).fc-button-active,
+#calendario-citas .fc-button-primary:not(:disabled):active {
+    color: #1e3229;
+}
+
+#calendario-citas .fc-col-header-cell-cushion,
+#calendario-citas .fc-timegrid-slot-label-cushion,
+#calendario-citas .fc-daygrid-day-number {
+    color: #b9cbc3;
+}
+
+#calendario-citas .fc-day-today .fc-col-header-cell-cushion,
+#calendario-citas .fc-day-today .fc-daygrid-day-number {
+    color: #8fd1b0;
+    font-weight: 700;
 }
 
 #calendario-citas .fc-event {
     cursor: pointer;
+    border-radius: 0.375rem;
 }
 
 /* Contenido de cada cita en el calendario */
@@ -81,6 +212,7 @@
     width: 100%;
     min-width: 0;
     padding: 0 0.25rem;
+    color: #eef4f0;
 }
 
 #calendario-citas .cita-punto {
@@ -99,7 +231,7 @@
 
 #calendario-citas .cita-hora {
     font-size: 0.75rem;
-    opacity: 0.9;
+    opacity: 0.85;
 }
 
 #calendario-citas .cita-texto {
