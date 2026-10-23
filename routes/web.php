@@ -3,8 +3,10 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VacunacionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -45,6 +47,16 @@ Route::middleware('auth')->group(function () {
         ->name('consultas.create');
     Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
         ->name('consultas.store');
+
+    // Vacunas y desparasitaciones (solo veterinarios; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/vacunas/crear', [VacunacionController::class, 'create'])
+        ->name('vacunaciones.create');
+    Route::post('/expedientes/{mascota}/vacunas', [VacunacionController::class, 'store'])
+        ->name('vacunaciones.store');
+    Route::get('/expedientes/{mascota}/desparasitaciones/crear', [DesparasitacionController::class, 'create'])
+        ->name('desparasitaciones.create');
+    Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
+        ->name('desparasitaciones.store');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {

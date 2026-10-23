@@ -17,7 +17,7 @@
         @endif
     </div>
 
-    {{-- Mensaje de éxito (por ejemplo, al registrar una consulta) --}}
+    {{-- Mensaje de éxito (al registrar una consulta, vacuna o desparasitación) --}}
     @if (session('status'))
         <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
@@ -84,7 +84,14 @@
     @if (! $expediente)
         {{-- Mascota sin expediente todavía --}}
         <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
-            Esta mascota todavía no tiene expediente clínico. Se abrirá automáticamente al registrar su primera consulta.
+            Esta mascota todavía no tiene expediente clínico. Se abrirá automáticamente al registrar su primera
+            consulta, vacuna o desparasitación.
+            @if ($esVeterinario)
+                <div class="mt-3 flex flex-wrap gap-3">
+                    <a href="{{ route('vacunaciones.create', $mascota) }}" class="btn-secundario">+ Registrar vacuna</a>
+                    <a href="{{ route('desparasitaciones.create', $mascota) }}" class="btn-secundario">+ Registrar desparasitación</a>
+                </div>
+            @endif
         </div>
     @else
         {{-- Alergias: destacadas para que nadie las pase por alto --}}
@@ -206,11 +213,19 @@
         {{-- Vacunas y desparasitaciones --}}
         <div class="grid gap-6 lg:grid-cols-2">
             @foreach ([
-                ['titulo' => 'Vacunas', 'registros' => $expediente->vacunaciones, 'nombre' => 'nombre_vacuna', 'proxima' => 'proxima_dosis'],
-                ['titulo' => 'Desparasitaciones', 'registros' => $expediente->desparasitaciones, 'nombre' => 'producto', 'proxima' => 'proxima_aplicacion'],
+                ['titulo' => 'Vacunas', 'registros' => $expediente->vacunaciones, 'nombre' => 'nombre_vacuna', 'proxima' => 'proxima_dosis', 'ruta' => 'vacunaciones.create'],
+                ['titulo' => 'Desparasitaciones', 'registros' => $expediente->desparasitaciones, 'nombre' => 'producto', 'proxima' => 'proxima_aplicacion', 'ruta' => 'desparasitaciones.create'],
             ] as $bloque)
                 <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-base font-semibold text-gray-800">{{ $bloque['titulo'] }}</h2>
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-base font-semibold text-gray-800">{{ $bloque['titulo'] }}</h2>
+                        @if ($esVeterinario)
+                            <a href="{{ route($bloque['ruta'], $mascota) }}"
+                                class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
+                                + Registrar
+                            </a>
+                        @endif
+                    </div>
 
                     @forelse ($bloque['registros'] as $registro)
                         @php $proxima = $registro->{$bloque['proxima']}; @endphp
