@@ -23,6 +23,14 @@ return new class extends Migration
                   ->constrained('users')
                   ->restrictOnDelete();
 
+            // Cita que dio origen a la consulta. Es opcional porque también hay
+            // consultas sin cita previa, y única para que una cita no genere dos consultas.
+            $table->foreignId('cita_id')
+                  ->nullable()
+                  ->unique()
+                  ->constrained('citas')
+                  ->nullOnDelete();
+
             $table->dateTime('fecha_consulta');
 
             $table->string('motivo', 255);
@@ -33,8 +41,8 @@ return new class extends Migration
             $table->decimal('temperatura_c', 4, 1)
                   ->nullable();
 
-            $table->text('diagnostico')
-                  ->nullable();
+            // El diagnóstico es obligatorio en toda consulta
+            $table->text('diagnostico');
 
             $table->text('tratamiento_indicado')
                   ->nullable();
