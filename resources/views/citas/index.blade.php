@@ -11,9 +11,12 @@
             'cancelada' => ['nombre' => 'Cancelada', 'color' => '#dc2626'],
             'no_asistio' => ['nombre' => 'No asistió', 'color' => '#6b7280'],
         ];
+
+        // Si el servidor rechazó una edición, el formulario se reabre en modo edición
+        $citaEditando = old('_formulario') === 'cita' ? old('_cita_id') : null;
     @endphp
 
-    {{-- Mensaje de éxito que envía el controlador (registrar, actualizar, cancelar) --}}
+    {{-- Mensaje de éxito que envía el controlador (registrar, actualizar, cancelar, cambiar estado) --}}
     @if (session('status'))
         <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
@@ -23,7 +26,7 @@
     {{-- Errores del servidor, por ejemplo un choque de horario --}}
     @if ($errors->any())
         <div role="alert" class="mb-6 rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600">
-            <p class="font-semibold">No se pudo guardar la cita:</p>
+            <p class="font-semibold">No se pudo completar la operación:</p>
             <ul class="mt-1 list-disc pl-5">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -69,10 +72,10 @@
         </aside>
     </div>
 
-    {{-- Ventana emergente con el detalle de la cita --}}
+    {{-- Ventana emergente con el detalle de la cita y sus acciones --}}
     <div id="modal-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
         role="dialog" aria-modal="true" aria-labelledby="modal-cita-titulo">
-        <div class="w-full max-w-sm rounded-2xl bg-white shadow-xl">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
 
             <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
                 <div>
@@ -109,10 +112,39 @@
                     </dd>
                 </div>
             </dl>
+
+            {{-- Acciones sobre la cita: el JavaScript completa la dirección de cada formulario --}}
+            <div class="space-y-3 border-t border-gray-100 px-5 py-4">
+                <form id="form-estado-cita" method="POST" class="flex items-center gap-2">
+                    @csrf
+                    @method('PATCH')
+                    <label for="estado-cita" class="sr-only">Nuevo estado</label>
+                    <select id="estado-cita" name="estado" class="campo">
+                        @foreach ($estados as $clave => $estado)
+                            @continue($clave === 'cancelada')
+                            <option value="{{ $clave }}">{{ $estado['nombre'] }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn-secundario shrink-0">Cambiar estado</button>
+                </form>
+
+                <div class="flex justify-between gap-3">
+                    <form id="form-cancelar-cita" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                            class="rounded-lg px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
+                            Cancelar cita
+                        </button>
+                    </form>
+
+                    <button type="button" data-editar-cita class="btn-primario">Editar</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Ventana emergente para registrar una cita --}}
+    {{-- Ventana emergente para registrar o editar una cita --}}
     {{-- $mascotas (id, nombre, cliente, telefono) y $veterinarios (id, nombre) los envía CitaController --}}
     <div id="modal-nueva-cita" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
         role="dialog" aria-modal="true" aria-labelledby="modal-nueva-cita-titulo">
@@ -120,8 +152,12 @@
 
             <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Nueva cita</p>
-                    <h2 id="modal-nueva-cita-titulo" class="mt-0.5 text-base font-semibold text-gray-800">Agendar cita</h2>
+                    <p id="modal-nueva-cita-etiqueta" class="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        {{ $citaEditando ? 'Editar cita' : 'Nueva cita' }}
+                    </p>
+                    <h2 id="modal-nueva-cita-titulo" class="mt-0.5 text-base font-semibold text-gray-800">
+                        {{ $citaEditando ? 'Modificar cita' : 'Agendar cita' }}
+                    </h2>
                 </div>
 
                 <button type="button" data-cerrar-modal aria-label="Cerrar"
@@ -132,11 +168,18 @@
                 </button>
             </div>
 
-            <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
+            <form id="form-nueva-cita" method="POST" class="space-y-4 px-5 py-4"
+                action="{{ $citaEditando ? url('/citas/' . $citaEditando) : url('/citas') }}"
+                data-url-citas="{{ url('/citas') }}">
                 @csrf
 
+                {{-- Al editar se activa el método PUT; al crear queda desactivado y se envía como POST --}}
+                <input type="hidden" id="metodo-cita" name="_method" value="PUT" @disabled(! $citaEditando)>
+                <input type="hidden" id="cita-id" name="_cita_id" value="{{ $citaEditando }}">
+                <input type="hidden" name="_formulario" value="cita">
+
                 {{-- Resumen de errores dentro del formulario, para que se vea sin cerrar la ventana --}}
-                @if ($errors->any())
+                @if ($errors->any() && old('_formulario') === 'cita')
                     <div role="alert" class="rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600">
                         Revisa los datos marcados antes de guardar.
                     </div>
@@ -202,14 +245,16 @@
 
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
                     <button type="button" data-cerrar-modal class="btn-secundario">Cancelar</button>
-                    <button type="submit" class="btn-primario">Guardar cita</button>
+                    <button type="submit" id="boton-guardar-cita" class="btn-primario">
+                        {{ $citaEditando ? 'Guardar cambios' : 'Guardar cita' }}
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 @endsection
 
-@if ($errors->any())
+@if ($errors->any() && old('_formulario') === 'cita')
     @push('scripts')
         <script>
             // Si el servidor rechazó la cita, se vuelve a abrir el formulario con los datos escritos
