@@ -30,12 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
             borderColor: estado.color,
             extendedProps: {
                 veterinarioId: cita.veterinario_id,
+                mascotaId: cita.mascota_id,
                 mascota: cita.mascota,
                 motivo: cita.motivo,
+                observaciones: cita.observaciones ?? '',
                 cliente: cita.cliente,
                 telefono: cita.telefono,
                 veterinario: cita.veterinario,
                 estado: estado.nombre,
+                estadoClave: cita.estado,
             },
         };
     };
@@ -51,7 +54,91 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatoFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     const formatoHora = { hour: '2-digit', minute: '2-digit' };
 
-    // Abre la ventana con los datos de la cita elegida
+    // Formulario de nueva cita / edición y sus elementos
+    const formulario = document.getElementById('form-nueva-cita');
+    const campoFecha = formulario.elements.fecha_cita;
+    const urlCitas = formulario.dataset.urlCitas;
+    const campoMetodo = document.getElementById('metodo-cita');
+    const campoCitaId = document.getElementById('cita-id');
+    const etiquetaFormulario = document.getElementById('modal-nueva-cita-etiqueta');
+    const tituloFormulario = document.getElementById('modal-nueva-cita-titulo');
+    const botonGuardar = document.getElementById('boton-guardar-cita');
+
+    // Acciones de la ventana de detalle
+    const formEstado = document.getElementById('form-estado-cita');
+    const formCancelar = document.getElementById('form-cancelar-cita');
+    const selectorEstado = document.getElementById('estado-cita');
+    const botonEditar = modal.querySelector('[data-editar-cita]');
+
+    // Cita abierta en la ventana de detalle
+    let citaSeleccionada = null;
+
+    const sumarMinutos = (fecha, minutos) => new Date(fecha.getTime() + minutos * 60000);
+
+    // Pasa una fecha al formato del input datetime-local (AAAA-MM-DDTHH:MM)
+    const aCampoFecha = (fecha) => {
+        const local = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 16);
+    };
+
+    // Abre o cierra cualquiera de las ventanas emergentes
+    const abrirVentana = (ventana) => {
+        ventana.classList.remove('hidden');
+        ventana.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const cerrarVentana = (ventana) => {
+        ventana.classList.add('hidden');
+        ventana.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    // Aviso dentro del formulario, para que se vea sin cerrar la ventana
+    const avisoFormulario = document.createElement('div');
+    avisoFormulario.setAttribute('role', 'alert');
+    avisoFormulario.className = 'hidden rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600';
+    formulario.prepend(avisoFormulario);
+
+    const mostrarAviso = (mensaje) => {
+        avisoFormulario.textContent = mensaje;
+        avisoFormulario.classList.remove('hidden');
+    };
+
+    const ocultarAviso = () => {
+        avisoFormulario.textContent = '';
+        avisoFormulario.classList.add('hidden');
+    };
+
+    // Prepara el formulario para registrar una cita nueva (POST /citas)
+    const modoNuevo = () => {
+        formulario.action = urlCitas;
+        campoMetodo.disabled = true;
+        campoCitaId.value = '';
+        etiquetaFormulario.textContent = 'Nueva cita';
+        tituloFormulario.textContent = 'Agendar cita';
+        botonGuardar.textContent = 'Guardar cita';
+    };
+
+    // Prepara el formulario para modificar una cita existente (PUT /citas/{id})
+    const modoEditar = (evento) => {
+        const datos = evento.extendedProps;
+
+        formulario.action = `${urlCitas}/${evento.id}`;
+        campoMetodo.disabled = false;
+        campoCitaId.value = evento.id;
+        etiquetaFormulario.textContent = 'Editar cita';
+        tituloFormulario.textContent = 'Modificar cita';
+        botonGuardar.textContent = 'Guardar cambios';
+
+        formulario.elements.mascota_id.value = datos.mascotaId;
+        formulario.elements.veterinario_id.value = datos.veterinarioId;
+        campoFecha.value = aCampoFecha(evento.start);
+        formulario.elements.motivo.value = datos.motivo ?? '';
+        formulario.elements.observaciones.value = datos.observaciones ?? '';
+    };
+
+    // Abre la ventana con los datos de la cita elegida y prepara sus acciones
     const mostrarCita = (evento) => {
         const inicio = evento.start;
         const fin = evento.end ?? evento.start;
@@ -64,6 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
             campo.textContent = datos[campo.dataset.campo] ?? '';
         });
         modal.querySelector('[data-campo="estado"]').style.backgroundColor = evento.backgroundColor;
+
+        citaSeleccionada = evento;
+        const estaCancelada = evento.extendedProps.estadoClave === 'cancelada';
+
+        formEstado.action = `${urlCitas}/${evento.id}/estado`;
+        formCancelar.action = `${urlCitas}/${evento.id}`;
+        selectorEstado.value = estaCancelada ? 'pendiente' : evento.extendedProps.estadoClave;
+        formCancelar.classList.toggle('hidden', estaCancelada);
 
         abrirVentana(modal);
         modal.querySelector('[data-cerrar-modal]').focus();
@@ -106,19 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         el.title = `${timeText} · ${mascota} · ${motivo}\nPropietario: ${cliente}`;
     };
 
-    // Abre o cierra cualquiera de las ventanas emergentes
-    const abrirVentana = (ventana) => {
-        ventana.classList.remove('hidden');
-        ventana.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
-    };
-
-    const cerrarVentana = (ventana) => {
-        ventana.classList.add('hidden');
-        ventana.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
-    };
-
     // Se cierran con la X, con Cancelar, al dar clic afuera o con Esc
     ventanas.forEach((ventana) => {
         ventana.querySelectorAll('[data-cerrar-modal]').forEach((boton) => {
@@ -137,40 +219,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const formulario = document.getElementById('form-nueva-cita');
-    const campoFecha = formulario.elements.fecha_cita;
-    const sumarMinutos = (fecha, minutos) => new Date(fecha.getTime() + minutos * 60000);
-
-    // Aviso dentro del formulario, para que se vea sin cerrar la ventana
-    const avisoFormulario = document.createElement('div');
-    avisoFormulario.setAttribute('role', 'alert');
-    avisoFormulario.className = 'hidden rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600';
-    formulario.prepend(avisoFormulario);
-
-    const mostrarAviso = (mensaje) => {
-        avisoFormulario.textContent = mensaje;
-        avisoFormulario.classList.remove('hidden');
-    };
-
-    const ocultarAviso = () => {
-        avisoFormulario.textContent = '';
-        avisoFormulario.classList.add('hidden');
-    };
-
-    // Pasa una fecha al formato del input datetime-local (AAAA-MM-DDTHH:MM)
-    const aCampoFecha = (fecha) => {
-        const local = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
-        return local.toISOString().slice(0, 16);
-    };
-
-    // Revisa si el veterinario ya tiene una cita en ese horario (las canceladas no cuentan)
-    const horarioOcupado = (inicio, veterinarioId) => {
+    // Revisa si el veterinario ya tiene una cita en ese horario.
+    // Las canceladas no cuentan, y al editar se ignora la propia cita.
+    const horarioOcupado = (inicio, veterinarioId, citaExcluida = null) => {
         const fin = sumarMinutos(inicio, DURACION_CITA_MINUTOS);
 
         return calendario.getEvents().some((cita) => {
             if (
-                cita.extendedProps.estado === estados.cancelada.nombre
+                cita.extendedProps.estadoClave === 'cancelada'
                 || Number(cita.extendedProps.veterinarioId) !== Number(veterinarioId)
+                || (citaExcluida !== null && String(cita.id) === String(citaExcluida))
             ) return false;
             const finCita = cita.end ?? sumarMinutos(cita.start, DURACION_CITA_MINUTOS);
             return inicio < finCita && fin > cita.start;
@@ -204,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         textoAyuda.textContent = `Seleccionaste el ${fecha} a las ${hora}.`;
         formulario.reset();
         ocultarAviso();
+        modoNuevo();
         campoFecha.value = aCampoFecha(inicio);
         abrirVentana(modalNueva);
         formulario.elements.mascota_id.focus();
@@ -250,10 +309,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sin esto, el calendario queda más ancho que su recuadro y se corta la columna del domingo.
     new ResizeObserver(() => calendario.updateSize()).observe(contenedor);
 
+    // Botón "Editar" del detalle: abre el formulario con los datos de la cita
+    botonEditar.addEventListener('click', () => {
+        if (!citaSeleccionada) return;
+
+        cerrarVentana(modal);
+        formulario.reset();
+        ocultarAviso();
+        modoEditar(citaSeleccionada);
+        abrirVentana(modalNueva);
+        formulario.elements.mascota_id.focus();
+    });
+
+    // Botón "Cancelar cita" del detalle: pide confirmación antes de enviar
+    formCancelar.addEventListener('submit', (evento) => {
+        const confirmado = window.confirm('¿Seguro que deseas cancelar esta cita? El horario quedará libre.');
+
+        if (!confirmado) evento.preventDefault();
+    });
+
+    // Antes de guardar, revisa si el veterinario ya tiene una cita en ese horario
     formulario.addEventListener('submit', (evento) => {
         const veterinarioId = Number(formulario.elements.veterinario_id.value);
+        const citaExcluida = campoCitaId.value || null;
 
-        if (!horarioOcupado(new Date(campoFecha.value), veterinarioId)) return;
+        if (!horarioOcupado(new Date(campoFecha.value), veterinarioId, citaExcluida)) return;
 
         evento.preventDefault();
         const mensaje = 'El veterinario seleccionado ya tiene una cita en ese horario.';
