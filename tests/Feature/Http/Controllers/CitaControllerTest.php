@@ -388,6 +388,9 @@ class CitaControllerTest extends TestCase
     /**
      * Devuelve eventos del calendario con campos y fechas ISO 8601.
      *
+     * Las fechas esperadas se calculan con la zona horaria de la aplicación,
+     * para que la prueba no dependa de que esté configurada en UTC.
+     *
      * @return void No retorna un valor.
      *
      * @author Equipo de desarrollo AgileVet-SIV
@@ -405,8 +408,8 @@ class CitaControllerTest extends TestCase
             ->assertJsonCount(1)
             ->assertJsonPath('0.id', $cita->id)
             ->assertJsonPath('0.title', 'Luna - Consulta de prueba')
-            ->assertJsonPath('0.start', '2026-10-22T10:00:00+00:00')
-            ->assertJsonPath('0.end', '2026-10-22T10:30:00+00:00')
+            ->assertJsonPath('0.start', CarbonImmutable::parse('2026-10-22 10:00:00')->toIso8601String())
+            ->assertJsonPath('0.end', CarbonImmutable::parse('2026-10-22 10:30:00')->toIso8601String())
             ->assertJsonPath('0.status', 'pendiente');
     }
 
