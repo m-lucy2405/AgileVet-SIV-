@@ -31,7 +31,17 @@
             </div>
         @endif
 
-         <form id="form-registro" method="POST" action="#"
+        @if ($errors->any())
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                <ul class="list-inside list-disc">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+         <form id="form-registro" method="POST" action="{{ route('clientes.store') }}"
             data-razas='@json($razasPorEspecie)' class="space-y-6">
             @csrf
 
@@ -76,7 +86,7 @@
 
                     <div class="sm:col-span-2">
                         <label for="cliente-direccion" class="etiqueta">Dirección</label>
-                        <input id="cliente-direccion" name="cliente[direccion]" type="text" maxlength="255"
+                        <input id="cliente-direccion" name="cliente[direccion]" type="text" required maxlength="255"
                             placeholder="Colonia, calle, municipio" class="campo" value="{{ old('cliente.direccion') }}">
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
+    Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
     Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
     Route::get('/citas/calendario/eventos', [CitaController::class, 'calendarEvents'])
         ->name('citas.calendario.eventos');
