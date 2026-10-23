@@ -90,6 +90,15 @@
     color-scheme: dark; /* calendarios y selectores nativos en tono oscuro */
 }
 
+/* Barra de desplazamiento de la página: discreta y con su espacio siempre
+   reservado, para que el ancho del contenido no cambie cuando aparece
+   (si cambia, FullCalendar queda más ancho que su recuadro y corta el domingo) */
+html {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #5f766c transparent;
+}
+
 body {
     color: #eef4f0;
     background-color: #34463f;
@@ -129,12 +138,6 @@ body {
     background: linear-gradient(90deg, rgb(143 209 176 / 0.20), rgb(143 209 176 / 0.04));
     box-shadow: inset 3px 0 0 #8fd1b0;
     color: #f6faf8;
-}
-
-/* Barras de desplazamiento discretas */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #5f766c transparent;
 }
 
 ::selection {
