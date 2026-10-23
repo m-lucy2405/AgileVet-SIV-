@@ -102,7 +102,7 @@ class CitaControllerTest extends TestCase
     }
 
     /**
-     * Permite reservar la misma hora para veterinarios diferentes.
+     * Permite reservar la misma hora para veterinarios diferentes con mascotas diferentes.
      *
      * @return void No retorna un valor.
      *
@@ -113,22 +113,50 @@ class CitaControllerTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
         $firstVeterinarian = $this->createVeterinarian();
         $secondVeterinarian = $this->createVeterinarian();
-        $mascota = $this->createMascota();
-        $payload = $this->appointmentPayload(
-            $firstVeterinarian,
-            $mascota,
-            '2026-10-22T10:00',
-        );
+        $firstMascota = $this->createMascota();
+        $secondMascota = $this->createMascota('Michi');
 
         $this->actingAs($firstVeterinarian)
-            ->post(route('citas.store'), $payload)
+            ->post(
+                route('citas.store'),
+                $this->appointmentPayload($firstVeterinarian, $firstMascota, '2026-10-22T10:00'),
+            )
             ->assertRedirect(route('citas.index'));
 
-        $payload['veterinario_id'] = $secondVeterinarian->id;
-        $response = $this->post(route('citas.store'), $payload);
+        $response = $this->post(
+            route('citas.store'),
+            $this->appointmentPayload($secondVeterinarian, $secondMascota, '2026-10-22T10:00'),
+        );
 
         $response->assertRedirect(route('citas.index'));
         $this->assertDatabaseCount('citas', 2);
+    }
+
+    /**
+     * Rechaza que la misma mascota tenga dos citas a la misma hora con veterinarios distintos.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_store_rejects_same_pet_with_different_veterinarians_at_same_time(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
+        $firstVeterinarian = $this->createVeterinarian();
+        $secondVeterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($firstVeterinarian, $mascota, '2026-10-22 10:00:00');
+
+        $response = $this->actingAs($secondVeterinarian)
+            ->post(
+                route('citas.store'),
+                $this->appointmentPayload($secondVeterinarian, $mascota, '2026-10-22T10:00'),
+            );
+
+        $response->assertSessionHasErrors([
+            'mascota_id' => 'La mascota ya tiene una cita en ese horario.',
+        ]);
+        $this->assertDatabaseCount('citas', 1);
     }
 
     /**
@@ -216,6 +244,37 @@ class CitaControllerTest extends TestCase
         $this->assertDatabaseHas('citas', [
             'id' => $cita->id,
             'fecha_cita' => '2026-10-22 10:00:00',
+        ]);
+    }
+
+    /**
+     * Rechaza mover una cita de una mascota encima de otra cita suya con otro veterinario.
+     *
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function test_update_rejects_moving_pet_onto_its_other_appointment(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-20 06:00:00'));
+        $firstVeterinarian = $this->createVeterinarian();
+        $secondVeterinarian = $this->createVeterinarian();
+        $mascota = $this->createMascota();
+        $this->createCita($firstVeterinarian, $mascota, '2026-10-22 10:00:00');
+        $cita = $this->createCita($secondVeterinarian, $mascota, '2026-10-22 11:00:00');
+
+        $response = $this->actingAs($secondVeterinarian)
+            ->put(
+                route('citas.update', $cita),
+                $this->appointmentPayload($secondVeterinarian, $mascota, '2026-10-22T10:00'),
+            );
+
+        $response->assertSessionHasErrors([
+            'mascota_id' => 'La mascota ya tiene una cita en ese horario.',
+        ]);
+        $this->assertDatabaseHas('citas', [
+            'id' => $cita->id,
+            'fecha_cita' => '2026-10-22 11:00:00',
         ]);
     }
 
@@ -388,6 +447,9 @@ class CitaControllerTest extends TestCase
     /**
      * Devuelve eventos del calendario con campos y fechas ISO 8601.
      *
+     * Las fechas esperadas se calculan con la zona horaria de la aplicación,
+     * para que la prueba no dependa de que esté configurada en UTC.
+     *
      * @return void No retorna un valor.
      *
      * @author Equipo de desarrollo AgileVet-SIV
@@ -405,8 +467,8 @@ class CitaControllerTest extends TestCase
             ->assertJsonCount(1)
             ->assertJsonPath('0.id', $cita->id)
             ->assertJsonPath('0.title', 'Luna - Consulta de prueba')
-            ->assertJsonPath('0.start', '2026-10-22T10:00:00+00:00')
-            ->assertJsonPath('0.end', '2026-10-22T10:30:00+00:00')
+            ->assertJsonPath('0.start', CarbonImmutable::parse('2026-10-22 10:00:00')->toIso8601String())
+            ->assertJsonPath('0.end', CarbonImmutable::parse('2026-10-22 10:30:00')->toIso8601String())
             ->assertJsonPath('0.status', 'pendiente');
     }
 
@@ -539,11 +601,12 @@ class CitaControllerTest extends TestCase
     /**
      * Crea una mascota con su cliente propietario para la prueba actual.
      *
+     * @param  string  $nombre  Nombre de la mascota; permite crear varias en una misma prueba.
      * @return Mascota Mascota persistida en la base de pruebas.
      *
      * @author Equipo de desarrollo AgileVet-SIV
      */
-    private function createMascota(): Mascota
+    private function createMascota(string $nombre = 'Luna'): Mascota
     {
         $cliente = Cliente::query()->create([
             'nombre' => 'Cliente de prueba',
@@ -554,7 +617,7 @@ class CitaControllerTest extends TestCase
 
         return Mascota::query()->create([
             'cliente_id' => $cliente->id,
-            'nombre' => 'Luna',
+            'nombre' => $nombre,
             'especie' => 'Canino',
             'sexo' => 'Hembra',
             'esterilizado' => false,

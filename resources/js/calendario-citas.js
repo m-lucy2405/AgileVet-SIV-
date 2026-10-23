@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!contenedor) return;
 
-     const estados = JSON.parse(contenedor.dataset.estados || '{}');
+    const estados = JSON.parse(contenedor.dataset.estados || '{}');
 
     // Convierte cada cita que envía el controlador al formato de FullCalendar
     const aEvento = (cita) => {
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const citas = JSON.parse(contenedor.dataset.citas || '[]').map(aEvento);
     const esPantallaPequena = () => window.innerWidth < 768;
-    
+
     const textoAyuda = document.getElementById('fecha-seleccionada');
     const modal = document.getElementById('modal-cita');
     const modalNueva = document.getElementById('modal-nueva-cita');
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatoFecha = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     const formatoHora = { hour: '2-digit', minute: '2-digit' };
 
-       // Abre la ventana con los datos de la cita elegida
+    // Abre la ventana con los datos de la cita elegida
     const mostrarCita = (evento) => {
         const inicio = evento.start;
         const fin = evento.end ?? evento.start;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.querySelector('[data-cerrar-modal]').focus();
     };
 
-        // Arma el texto de cada cita según la vista del calendario
+    // Arma el texto de cada cita según la vista del calendario
     const dibujarCita = ({ event, timeText, view }) => {
         const { mascota, motivo } = event.extendedProps;
 
@@ -81,15 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (view.type === 'dayGridMonth') {
-            const contenedor = document.createElement('div');
-            contenedor.className = 'cita-mes';
+            const contenedorCita = document.createElement('div');
+            contenedorCita.className = 'cita-mes';
 
             const punto = document.createElement('span');
             punto.className = 'cita-punto';
             punto.style.backgroundColor = event.backgroundColor;
 
-            contenedor.append(punto, crearLinea(`${timeText} ${mascota}`, 'cita-texto'));
-            return { domNodes: [contenedor] };
+            contenedorCita.append(punto, crearLinea(`${timeText} ${mascota}`, 'cita-texto'));
+            return { domNodes: [contenedorCita] };
         }
 
         return {
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.title = `${timeText} · ${mascota} · ${motivo}\nPropietario: ${cliente}`;
     };
 
-        // Abre o cierra cualquiera de las ventanas emergentes
+    // Abre o cierra cualquiera de las ventanas emergentes
     const abrirVentana = (ventana) => {
         ventana.classList.remove('hidden');
         ventana.classList.add('flex');
@@ -137,9 +137,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-        const formulario = document.getElementById('form-nueva-cita');
+    const formulario = document.getElementById('form-nueva-cita');
     const campoFecha = formulario.elements.fecha_cita;
     const sumarMinutos = (fecha, minutos) => new Date(fecha.getTime() + minutos * 60000);
+
+    // Aviso dentro del formulario, para que se vea sin cerrar la ventana
+    const avisoFormulario = document.createElement('div');
+    avisoFormulario.setAttribute('role', 'alert');
+    avisoFormulario.className = 'hidden rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600';
+    formulario.prepend(avisoFormulario);
+
+    const mostrarAviso = (mensaje) => {
+        avisoFormulario.textContent = mensaje;
+        avisoFormulario.classList.remove('hidden');
+    };
+
+    const ocultarAviso = () => {
+        avisoFormulario.textContent = '';
+        avisoFormulario.classList.add('hidden');
+    };
 
     // Pasa una fecha al formato del input datetime-local (AAAA-MM-DDTHH:MM)
     const aCampoFecha = (fecha) => {
@@ -147,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return local.toISOString().slice(0, 16);
     };
 
-    // Revisa si ya hay una cita en ese horario (las canceladas no cuentan)
+    // Revisa si el veterinario ya tiene una cita en ese horario (las canceladas no cuentan)
     const horarioOcupado = (inicio, veterinarioId) => {
         const fin = sumarMinutos(inicio, DURACION_CITA_MINUTOS);
 
@@ -187,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         textoAyuda.textContent = `Seleccionaste el ${fecha} a las ${hora}.`;
         formulario.reset();
+        ocultarAviso();
         campoFecha.value = aCampoFecha(inicio);
         abrirVentana(modalNueva);
         formulario.elements.mascota_id.focus();
@@ -217,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventContent: dibujarCita,
         eventDidMount: agregarDescripcion,
         dayMaxEvents: 2,
-          dateClick: seleccionarFecha,
+        dateClick: seleccionarFecha,
         eventClick: (info) => mostrarCita(info.event),
         windowResize: () => {
             if (esPantallaPequena() && calendario.view.type === 'timeGridWeek') {
@@ -228,12 +245,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     calendario.render();
 
+    // Recalcula el tamaño cada vez que cambia el ancho del recuadro (al aparecer la barra
+    // de desplazamiento, al abrir o cerrar el menú, o al cambiar el tamaño de la ventana).
+    // Sin esto, el calendario queda más ancho que su recuadro y se corta la columna del domingo.
+    new ResizeObserver(() => calendario.updateSize()).observe(contenedor);
+
     formulario.addEventListener('submit', (evento) => {
         const veterinarioId = Number(formulario.elements.veterinario_id.value);
 
         if (!horarioOcupado(new Date(campoFecha.value), veterinarioId)) return;
 
         evento.preventDefault();
-        textoAyuda.textContent = 'El veterinario seleccionado ya tiene una cita en ese horario.';
+        const mensaje = 'El veterinario seleccionado ya tiene una cita en ese horario.';
+        textoAyuda.textContent = mensaje;
+        mostrarAviso(mensaje);
     });
 });
