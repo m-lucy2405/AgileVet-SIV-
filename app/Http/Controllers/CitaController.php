@@ -228,7 +228,7 @@ class CitaController extends Controller
     }
 
     /**
-     * Valida y registra una cita si el veterinario tiene disponible el horario solicitado.
+     * Valida y registra una cita si el veterinario y la mascota tienen disponible el horario.
      *
      * @param  Request  $request  Petición con mascota, veterinario, fecha y detalle de la cita.
      * @return RedirectResponse Redirección al calendario con el resultado de la operación.
@@ -253,11 +253,18 @@ class CitaController extends Controller
 
         DB::transaction(function () use ($validated, $appointmentStart): void {
             $veterinarianId = (int) $validated['veterinario_id'];
+            $mascotaId = (int) $validated['mascota_id'];
+
+            // Se bloquea siempre en el mismo orden (veterinario y luego mascota)
+            // para serializar reservas simultáneas sin provocar bloqueos cruzados.
             $this->lockVeterinarian($veterinarianId);
+            $this->lockMascota($mascotaId);
+
             $this->assertNoVeterinarianConflict($appointmentStart, $veterinarianId);
+            $this->assertNoPetConflict($appointmentStart, $mascotaId);
 
             Cita::query()->create([
-                'mascota_id' => $validated['mascota_id'],
+                'mascota_id' => $mascotaId,
                 'veterinario_id' => $veterinarianId,
                 'fecha_cita' => $appointmentStart->format('Y-m-d H:i:s'),
                 'estado' => 'pendiente',
@@ -302,19 +309,20 @@ class CitaController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
             $veterinarianId = (int) $validated['veterinario_id'];
+            $mascotaId = (int) $validated['mascota_id'];
 
             $this->lockVeterinarian($veterinarianId);
+            $this->lockMascota($mascotaId);
 
             if ($lockedCita->estado !== 'cancelada') {
-                $this->assertNoVeterinarianConflict(
-                    $appointmentStart,
-                    $veterinarianId,
-                    (int) $lockedCita->getKey(),
-                );
+                $exceptId = (int) $lockedCita->getKey();
+
+                $this->assertNoVeterinarianConflict($appointmentStart, $veterinarianId, $exceptId);
+                $this->assertNoPetConflict($appointmentStart, $mascotaId, $exceptId);
             }
 
             $lockedCita->update([
-                'mascota_id' => $validated['mascota_id'],
+                'mascota_id' => $mascotaId,
                 'veterinario_id' => $veterinarianId,
                 'fecha_cita' => $appointmentStart->format('Y-m-d H:i:s'),
                 'motivo' => $validated['motivo'],
@@ -383,20 +391,20 @@ class CitaController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
             $veterinarianId = (int) $lockedCita->veterinario_id;
+            $mascotaId = (int) $lockedCita->mascota_id;
 
             $this->lockVeterinarianRecord($veterinarianId);
+            $this->lockMascota($mascotaId);
 
             if ($estado !== 'cancelada') {
                 $appointmentStart = CarbonImmutable::parse(
                     $lockedCita->fecha_cita->toDateTimeString(),
                     (string) config('app.timezone'),
                 );
+                $exceptId = (int) $lockedCita->getKey();
 
-                $this->assertNoVeterinarianConflict(
-                    $appointmentStart,
-                    $veterinarianId,
-                    (int) $lockedCita->getKey(),
-                );
+                $this->assertNoVeterinarianConflict($appointmentStart, $veterinarianId, $exceptId);
+                $this->assertNoPetConflict($appointmentStart, $mascotaId, $exceptId);
             }
 
             $lockedCita->update(['estado' => $estado]);
@@ -450,7 +458,23 @@ class CitaController extends Controller
     }
 
     /**
-     * Rechaza reservas cuyo intervalo de 30 minutos se cruza con otra cita activa.
+     * Bloquea el registro de la mascota para serializar las reservas de su agenda.
+     *
+     * @param  int  $mascotaId  Identificador de la mascota que se bloqueará.
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    private function lockMascota(int $mascotaId): void
+    {
+        Mascota::query()
+            ->whereKey($mascotaId)
+            ->lockForUpdate()
+            ->firstOrFail();
+    }
+
+    /**
+     * Rechaza reservas cuyo intervalo se cruza con otra cita activa del mismo veterinario.
      *
      * @param  CarbonImmutable  $appointmentStart  Inicio del horario que se desea reservar.
      * @param  int  $veterinarianId  Identificador del veterinario responsable.
@@ -464,24 +488,65 @@ class CitaController extends Controller
         int $veterinarianId,
         ?int $exceptAppointmentId = null,
     ): void {
-        $conflictingAppointments = Cita::query()
-            ->where('veterinario_id', $veterinarianId)
-            ->where('estado', '!=', 'cancelada')
-            ->overlappingInterval(
-                $appointmentStart,
-                $appointmentStart->addMinutes(self::DURACION_CITA_MINUTOS),
-                self::DURACION_CITA_MINUTOS,
-            );
-
-        if ($exceptAppointmentId !== null) {
-            $conflictingAppointments->where('id', '!=', $exceptAppointmentId);
-        }
-
-        if ($conflictingAppointments->exists()) {
+        if ($this->hasActiveConflict('veterinario_id', $veterinarianId, $appointmentStart, $exceptAppointmentId)) {
             throw ValidationException::withMessages([
                 'fecha_cita' => 'El veterinario ya tiene una cita en ese horario.',
             ]);
         }
+    }
+
+    /**
+     * Rechaza reservas cuyo intervalo se cruza con otra cita activa de la misma mascota.
+     *
+     * @param  CarbonImmutable  $appointmentStart  Inicio del horario que se desea reservar.
+     * @param  int  $mascotaId  Identificador de la mascota atendida.
+     * @param  int|null  $exceptAppointmentId  Cita excluida al editar o cambiar un estado.
+     * @return void No retorna un valor.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    private function assertNoPetConflict(
+        CarbonImmutable $appointmentStart,
+        int $mascotaId,
+        ?int $exceptAppointmentId = null,
+    ): void {
+        if ($this->hasActiveConflict('mascota_id', $mascotaId, $appointmentStart, $exceptAppointmentId)) {
+            throw ValidationException::withMessages([
+                'mascota_id' => 'La mascota ya tiene una cita en ese horario.',
+            ]);
+        }
+    }
+
+    /**
+     * Indica si existe una cita activa que se cruce con el intervalo solicitado.
+     *
+     * @param  string  $column  Columna por la que se busca el choque (veterinario_id o mascota_id).
+     * @param  int  $id  Valor de la columna para el veterinario o la mascota.
+     * @param  CarbonImmutable  $appointmentStart  Inicio del horario que se desea reservar.
+     * @param  int|null  $exceptAppointmentId  Cita excluida al editar o cambiar un estado.
+     * @return bool Verdadero si el horario ya está ocupado.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    private function hasActiveConflict(
+        string $column,
+        int $id,
+        CarbonImmutable $appointmentStart,
+        ?int $exceptAppointmentId = null,
+    ): bool {
+        return Cita::query()
+            ->where($column, $id)
+            ->where('estado', '!=', 'cancelada')
+            ->when(
+                $exceptAppointmentId !== null,
+                fn (EloquentBuilder $query): EloquentBuilder => $query->where('id', '!=', $exceptAppointmentId),
+            )
+            ->overlappingInterval(
+                $appointmentStart,
+                $appointmentStart->addMinutes(self::DURACION_CITA_MINUTOS),
+                self::DURACION_CITA_MINUTOS,
+            )
+            ->exists();
     }
 
     /**
