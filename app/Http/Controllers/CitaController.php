@@ -59,6 +59,8 @@ class CitaController extends Controller
             ->map(fn (Cita $cita): array => [
                 'id' => $cita->id,
                 'veterinario_id' => $cita->veterinario_id,
+                'mascota_id' => $cita->mascota_id,
+                'observaciones' => $cita->observaciones,
                 'start' => $cita->fecha_cita->toIso8601String(),
                 'end' => $cita->fecha_cita
                     ->addMinutes(self::DURACION_CITA_MINUTOS)
