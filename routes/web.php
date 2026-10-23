@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,12 @@ Route::middleware('auth')->group(function () {
     // Expedientes clínicos (consulta para cualquier usuario con sesión)
     Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
     Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
+
+    // Consultas (solo veterinarios; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/consultas/crear', [ConsultaController::class, 'create'])
+        ->name('consultas.create');
+    Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
+        ->name('consultas.store');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {

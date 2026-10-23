@@ -3,9 +3,26 @@
 @section('titulo', 'Expediente de ' . $mascota->nombre)
 
 @section('contenido')
-    <a href="{{ route('expedientes.index') }}" class="mb-4 inline-block text-sm text-primario-300 hover:underline">
-        &larr; Volver a expedientes
-    </a>
+    @php
+        $esVeterinario = auth()->user()?->role?->nombre === 'Veterinario';
+    @endphp
+
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <a href="{{ route('expedientes.index') }}" class="text-sm text-primario-300 hover:underline">
+            &larr; Volver a expedientes
+        </a>
+
+        @if ($esVeterinario)
+            <a href="{{ route('consultas.create', $mascota) }}" class="btn-primario">+ Registrar consulta</a>
+        @endif
+    </div>
+
+    {{-- Mensaje de éxito (por ejemplo, al registrar una consulta) --}}
+    @if (session('status'))
+        <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {{ session('status') }}
+        </div>
+    @endif
 
     {{-- Datos de la mascota y del propietario --}}
     <div class="mb-6 grid gap-6 lg:grid-cols-2">
@@ -66,7 +83,7 @@
 
     @if (! $expediente)
         {{-- Mascota sin expediente todavía --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
+        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
             Esta mascota todavía no tiene expediente clínico. Se abrirá automáticamente al registrar su primera consulta.
         </div>
     @else
@@ -104,7 +121,15 @@
         @forelse ($proximasCitas as $cita)
             <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span class="text-gray-800">{{ $cita->fecha_cita->format('d/m/Y H:i') }} · {{ $cita->motivo }}</span>
-                <span class="text-gray-500">{{ $cita->veterinario->nombre }}</span>
+                <span class="flex items-center gap-3">
+                    <span class="text-gray-500">{{ $cita->veterinario->nombre }}</span>
+                    @if ($esVeterinario)
+                        <a href="{{ route('consultas.create', ['mascota' => $mascota, 'cita' => $cita->id]) }}"
+                            class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
+                            Atender
+                        </a>
+                    @endif
+                </span>
             </div>
         @empty
             <p class="mt-3 text-sm text-gray-500">No tiene citas pendientes.</p>
