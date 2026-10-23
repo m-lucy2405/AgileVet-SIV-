@@ -13,6 +13,25 @@
         ];
     @endphp
 
+    {{-- Mensaje de éxito que envía el controlador (registrar, actualizar, cancelar) --}}
+    @if (session('status'))
+        <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    {{-- Errores del servidor, por ejemplo un choque de horario --}}
+    @if ($errors->any())
+        <div role="alert" class="mb-6 rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <p class="font-semibold">No se pudo guardar la cita:</p>
+            <ul class="mt-1 list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="grid gap-6 xl:grid-cols-[1fr_18rem]">
 
         {{-- Calendario --}}
@@ -116,16 +135,26 @@
             <form id="form-nueva-cita" action="{{ url('/citas') }}" method="POST" class="space-y-4 px-5 py-4">
                 @csrf
 
+                {{-- Resumen de errores dentro del formulario, para que se vea sin cerrar la ventana --}}
+                @if ($errors->any())
+                    <div role="alert" class="rounded-lg border border-red-500/30 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        Revisa los datos marcados antes de guardar.
+                    </div>
+                @endif
+
                 <div>
                     <label for="mascota_id" class="etiqueta">Mascota</label>
                     <select id="mascota_id" name="mascota_id" class="campo" required>
                         <option value="">Selecciona una mascota</option>
                         @foreach ($mascotas ?? [] as $mascota)
-                            <option value="{{ $mascota['id'] }}">
+                            <option value="{{ $mascota['id'] }}" @selected(old('mascota_id') == $mascota['id'])>
                                 {{ $mascota['nombre'] }} — {{ $mascota['cliente'] }}
                             </option>
                         @endforeach
                     </select>
+                    @error('mascota_id')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
@@ -133,27 +162,42 @@
                     <select id="veterinario_id" name="veterinario_id" class="campo" required>
                         <option value="">Selecciona un veterinario</option>
                         @foreach ($veterinarios ?? [] as $veterinario)
-                            <option value="{{ $veterinario['id'] }}">{{ $veterinario['nombre'] }}</option>
+                            <option value="{{ $veterinario['id'] }}" @selected(old('veterinario_id') == $veterinario['id'])>
+                                {{ $veterinario['nombre'] }}
+                            </option>
                         @endforeach
                     </select>
+                    @error('veterinario_id')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="fecha_cita" class="etiqueta">Fecha y hora</label>
-                    <input type="datetime-local" id="fecha_cita" name="fecha_cita" class="campo" step="1800" required>
+                    <input type="datetime-local" id="fecha_cita" name="fecha_cita" class="campo" step="1800" required
+                        value="{{ old('fecha_cita') }}">
+                    @error('fecha_cita')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="motivo" class="etiqueta">Motivo</label>
                     <input type="text" id="motivo" name="motivo" class="campo" maxlength="255"
-                        placeholder="Ej. Vacunación" required>
+                        placeholder="Ej. Vacunación" required value="{{ old('motivo') }}">
+                    @error('motivo')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label for="observaciones" class="etiqueta">
                         Observaciones <span class="font-normal text-gray-400">(opcional)</span>
                     </label>
-                    <textarea id="observaciones" name="observaciones" rows="3" class="campo"></textarea>
+                    <textarea id="observaciones" name="observaciones" rows="3" class="campo">{{ old('observaciones') }}</textarea>
+                    @error('observaciones')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
@@ -164,3 +208,20 @@
         </div>
     </div>
 @endsection
+
+@if ($errors->any())
+    @push('scripts')
+        <script>
+            // Si el servidor rechazó la cita, se vuelve a abrir el formulario con los datos escritos
+            (() => {
+                const modal = document.getElementById('modal-nueva-cita');
+
+                if (!modal) return;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            })();
+        </script>
+    @endpush
+@endif
