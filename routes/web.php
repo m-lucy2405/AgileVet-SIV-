@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
     Route::get('/citas/recordatorios', [CitaController::class, 'remindersPage'])
         ->name('citas.recordatorios');
+
+    // Expedientes clínicos (consulta para cualquier usuario con sesión)
+    Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
+    Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
