@@ -2,7 +2,11 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\DesparasitacionController;
+use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VacunacionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -33,6 +37,26 @@ Route::middleware('auth')->group(function () {
     Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
     Route::get('/citas/recordatorios', [CitaController::class, 'remindersPage'])
         ->name('citas.recordatorios');
+
+    // Expedientes clínicos (consulta para cualquier usuario con sesión)
+    Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
+    Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
+
+    // Consultas (solo veterinarios; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/consultas/crear', [ConsultaController::class, 'create'])
+        ->name('consultas.create');
+    Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
+        ->name('consultas.store');
+
+    // Vacunas y desparasitaciones (solo veterinarios; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/vacunas/crear', [VacunacionController::class, 'create'])
+        ->name('vacunaciones.create');
+    Route::post('/expedientes/{mascota}/vacunas', [VacunacionController::class, 'store'])
+        ->name('vacunaciones.store');
+    Route::get('/expedientes/{mascota}/desparasitaciones/crear', [DesparasitacionController::class, 'create'])
+        ->name('desparasitaciones.create');
+    Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
+        ->name('desparasitaciones.store');
 
     // La administración de cuentas y roles está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
