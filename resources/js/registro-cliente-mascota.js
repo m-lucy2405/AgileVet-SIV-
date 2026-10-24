@@ -86,6 +86,143 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarTarjetas();
     });
 
+
+        const botonGuardar = formulario.querySelector('[data-guardar]');
+    const aviso = document.getElementById('aviso-registro');
+
+    // Mensaje en español según el error del campo
+    const mensajeError = (campo) => {
+        const estado = campo.validity;
+
+        if (estado.valueMissing) return 'Este campo es obligatorio.';
+        if (estado.typeMismatch) return 'Escribe un correo válido.';
+        if (estado.patternMismatch) return campo.title || 'El formato no es válido.';
+        if (estado.tooLong) return `Máximo ${campo.maxLength} caracteres.`;
+        if (estado.rangeOverflow) return 'La fecha no puede ser futura.';
+        return '';
+    };
+
+    // Marca el campo en rojo o verde y muestra el error debajo
+    const mostrarError = (campo, mensaje) => {
+        const contenedor = campo.parentElement;
+        contenedor.querySelectorAll('.error-campo').forEach((error) => error.remove());
+
+        campo.classList.toggle('border-red-500', Boolean(mensaje));
+        campo.classList.toggle('border-green-500', !mensaje && campo.value !== '');
+
+        if (!mensaje) return;
+
+        const error = document.createElement('p');
+        error.className = 'error-campo';
+        error.textContent = mensaje;
+        contenedor.append(error);
+    };
+
+    const validarCampo = (campo) => mostrarError(campo, campo.checkValidity() ? '' : mensajeError(campo));
+    const esValidable = (campo) => campo.willValidate && !['checkbox', 'hidden', 'submit'].includes(campo.type);
+
+    // 70001111 → 7000-1111
+    const formatearTelefono = (input) => {
+        const digitos = input.value.replace(/\D/g, '').slice(0, 8);
+        input.value = digitos.length > 4 ? `${digitos.slice(0, 4)}-${digitos.slice(4)}` : digitos;
+    };
+
+    // Valida al salir del campo y, después, mientras se escribe
+    formulario.addEventListener('focusout', (evento) => {
+        if (!esValidable(evento.target)) return;
+        evento.target.dataset.tocado = 'si';
+        validarCampo(evento.target);
+    });
+
+    formulario.addEventListener('input', (evento) => {
+        const campo = evento.target;
+        if (campo.id === 'cliente-telefono') formatearTelefono(campo);
+        if (esValidable(campo) && campo.dataset.tocado) validarCampo(campo);
+    });
+
+       const mostrarAviso = (texto, tipo) => {
+        const colores = tipo === 'exito'
+            ? ['border-[#4ade80]', 'bg-[#1f4d3a]', 'text-[#dcfce7]']
+            : ['border-[#f87171]', 'bg-[#5c1f24]', 'text-[#fee2e2]'];
+
+        aviso.className = 'mb-6 rounded-lg border px-4 py-3 text-sm font-medium';
+        aviso.classList.add(...colores);
+        aviso.textContent = texto;
+        aviso.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    // Laravel manda "mascotas.0.nombre"; el campo se llama "mascotas[0][nombre]"
+    const aNombreCampo = (clave) => {
+        const [primero, ...resto] = clave.split('.');
+        return primero + resto.map((parte) => `[${parte}]`).join('');
+    };
+
+    // Deja el formulario vacío y con una sola mascota
+    const limpiarFormulario = () => {
+        lista.querySelectorAll('[data-mascota]').forEach((tarjeta, posicion) => {
+            if (posicion > 0) tarjeta.remove();
+        });
+
+        formulario.reset();
+        formulario.querySelectorAll('.error-campo').forEach((error) => error.remove());
+        formulario.querySelectorAll('[data-edad]').forEach((edad) => (edad.textContent = ''));
+        formulario.querySelectorAll('.campo').forEach((campo) => {
+            campo.classList.remove('border-red-500', 'border-green-500');
+            delete campo.dataset.tocado;
+        });
+
+        actualizarTarjetas();
+        document.getElementById('cliente-nombre').focus();
+    };
+
+    // Envía el registro sin recargar la página
+    formulario.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+
+        const campos = [...formulario.elements].filter(esValidable);
+        campos.forEach((campo) => {
+            campo.dataset.tocado = 'si';
+            validarCampo(campo);
+        });
+
+        const primerError = campos.find((campo) => !campo.checkValidity());
+        if (primerError) {
+            primerError.focus();
+            return;
+        }
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando…';
+
+        try {
+            const respuesta = await fetch(formulario.action, {
+                method: 'POST',
+                body: new FormData(formulario),
+                headers: { Accept: 'application/json' },
+            });
+            const datos = await respuesta.json().catch(() => ({}));
+
+            if (respuesta.status === 422) {
+                Object.entries(datos.errors ?? {}).forEach(([clave, mensajes]) => {
+                    const campo = formulario.elements[aNombreCampo(clave)];
+                    if (campo) mostrarError(campo, mensajes[0]);
+                });
+                mostrarAviso('Revisa los campos marcados en rojo.', 'error');
+                return;
+            }
+
+            if (!respuesta.ok) throw new Error();
+
+            mostrarAviso(datos.message ?? 'El registro se guardó correctamente.', 'exito');
+            limpiarFormulario();
+        } catch {
+            mostrarAviso('No se pudo guardar el registro. Intenta de nuevo.', 'error');
+        } finally {
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = 'Guardar registro';
+        }
+    });
+
     // Estado inicial
     lista.querySelectorAll('[data-fecha-nacimiento]').forEach((input) => {
         if (input.value) calcularEdad(input);

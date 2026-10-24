@@ -15,7 +15,9 @@ return new class extends Migration
 
             $table->id();
 
+            // Cada mascota tiene un solo expediente clínico
             $table->foreignId('mascota_id')
+                  ->unique()
                   ->constrained('mascotas')
                   ->restrictOnDelete();
 

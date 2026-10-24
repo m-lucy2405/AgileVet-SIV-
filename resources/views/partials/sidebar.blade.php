@@ -8,7 +8,7 @@
         ],
         'Atención' => [
             ['texto' => 'Clientes y mascotas', 'url' => route('clientes.registro'), 'ruta' => 'clientes*'],
-            ['texto' => 'Expedientes', 'url' => '#', 'ruta' => 'expedientes*'],
+            ['texto' => 'Expedientes', 'url' => route('expedientes.index'), 'ruta' => 'expedientes*'],
         ],
         'Negocio' => [
             ['texto' => 'Inventario', 'url' => '#', 'ruta' => 'inventario*'],

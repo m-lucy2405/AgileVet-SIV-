@@ -31,6 +31,8 @@
             </div>
         @endif
 
+        <div id="aviso-registro" class="mb-6 hidden rounded-lg border px-4 py-3 text-sm" role="status"></div>
+
         @if ($errors->any())
             <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
                 <ul class="list-inside list-disc">
@@ -41,7 +43,7 @@
             </div>
         @endif
 
-         <form id="form-registro" method="POST" action="{{ route('clientes.store') }}"
+        <form id="form-registro" method="POST" action="{{ route('clientes.store') }}"
             data-razas='@json($razasPorEspecie)' class="space-y-6">
             @csrf
 
@@ -52,7 +54,7 @@
                     <div>
                         <h2 class="text-base font-semibold text-gray-800">Datos del propietario</h2>
                         <p class="text-xs text-gray-500">Persona responsable de la mascota.</p>
-                    </div>|
+                    </div>
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -120,7 +122,7 @@
 
             <div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-6 sm:flex-row sm:justify-end">
                 <a href="{{ route('dashboard') }}" class="btn-secundario">Cancelar</a>
-                <button type="submit" class="btn-primario">Guardar registro</button>
+                <button type="submit" class="btn-primario" data-guardar>Guardar registro</button>
             </div>
         </form>
     </div>

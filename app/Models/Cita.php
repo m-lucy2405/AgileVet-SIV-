@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cita extends Model
 {
@@ -46,6 +47,17 @@ class Cita extends Model
         return $this->belongsTo(
             User::class,
             'veterinario_id'
+        );
+    }
+
+    /**
+     * Relación: consulta registrada a partir de esta cita, si ya fue atendida.
+     */
+    public function consulta(): HasOne
+    {
+        return $this->hasOne(
+            Consulta::class,
+            'cita_id'
         );
     }
 
