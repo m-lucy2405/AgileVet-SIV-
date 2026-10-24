@@ -140,12 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (esValidable(campo) && campo.dataset.tocado) validarCampo(campo);
     });
 
-    const mostrarAviso = (texto, tipo) => {
+       const mostrarAviso = (texto, tipo) => {
         const colores = tipo === 'exito'
-            ? ['border-green-200', 'bg-green-50', 'text-green-800']
-            : ['border-red-200', 'bg-red-50', 'text-red-800'];
+            ? ['border-[#4ade80]', 'bg-[#1f4d3a]', 'text-[#dcfce7]']
+            : ['border-[#f87171]', 'bg-[#5c1f24]', 'text-[#fee2e2]'];
 
-        aviso.className = 'mb-6 rounded-lg border px-4 py-3 text-sm';
+        aviso.className = 'mb-6 rounded-lg border px-4 py-3 text-sm font-medium';
         aviso.classList.add(...colores);
         aviso.textContent = texto;
         aviso.scrollIntoView({ behavior: 'smooth', block: 'center' });
