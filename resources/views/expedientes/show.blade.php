@@ -17,7 +17,7 @@
         @endif
     </div>
 
-    {{-- Mensaje de éxito (al registrar una consulta, vacuna o desparasitación) --}}
+    {{-- Mensaje de éxito (al registrar o editar información del expediente) --}}
     @if (session('status'))
         <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
@@ -88,6 +88,7 @@
             consulta, vacuna o desparasitación.
             @if ($esVeterinario)
                 <div class="mt-3 flex flex-wrap gap-3">
+                    <a href="{{ route('expedientes.edit', $mascota) }}" class="btn-secundario">Abrir expediente</a>
                     <a href="{{ route('vacunaciones.create', $mascota) }}" class="btn-secundario">+ Registrar vacuna</a>
                     <a href="{{ route('desparasitaciones.create', $mascota) }}" class="btn-secundario">+ Registrar desparasitación</a>
                 </div>
@@ -104,8 +105,18 @@
 
         {{-- Datos generales del expediente --}}
         <section class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 class="text-base font-semibold text-gray-800">Expediente clínico</h2>
-            <p class="mt-1 text-xs text-gray-500">Abierto el {{ $expediente->fecha_apertura->format('d/m/Y') }}</p>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-800">Expediente clínico</h2>
+                    <p class="mt-1 text-xs text-gray-500">Abierto el {{ $expediente->fecha_apertura->format('d/m/Y') }}</p>
+                </div>
+                @if ($esVeterinario)
+                    <a href="{{ route('expedientes.edit', $mascota) }}"
+                        class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
+                        Editar datos
+                    </a>
+                @endif
+            </div>
 
             <dl class="mt-4 grid gap-4 text-sm md:grid-cols-3">
                 @foreach ([

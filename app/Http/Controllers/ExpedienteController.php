@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RequiereVeterinario;
 use App\Models\Mascota;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Muestra la lista de expedientes clínicos y el expediente de cada mascota.
+ * Muestra la lista de expedientes clínicos, el expediente de cada mascota
+ * y permite a los veterinarios actualizar sus datos generales.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
 class ExpedienteController extends Controller
 {
+    use RequiereVeterinario;
+
     /**
      * Lista las mascotas con su propietario y el estado de su expediente.
      *
@@ -81,5 +87,63 @@ class ExpedienteController extends Controller
             'expediente' => $mascota->expediente,
             'proximasCitas' => $proximasCitas,
         ]);
+    }
+
+    /**
+     * Muestra el formulario para editar los datos generales del expediente.
+     *
+     * @param  Request  $request  Petición del usuario autenticado.
+     * @param  Mascota  $mascota  Mascota resuelta mediante route model binding.
+     * @return View Formulario con los datos actuales del expediente.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function edit(Request $request, Mascota $mascota): View
+    {
+        $this->asegurarVeterinario($request);
+
+        $mascota->load(['cliente', 'expediente']);
+
+        return view('expedientes.edit', [
+            'mascota' => $mascota,
+            'expediente' => $mascota->expediente,
+        ]);
+    }
+
+    /**
+     * Actualiza los datos generales del expediente; lo abre si todavía no existe.
+     *
+     * @param  Request  $request  Petición con antecedentes, alergias, enfermedades y observaciones.
+     * @param  Mascota  $mascota  Mascota resuelta mediante route model binding.
+     * @return RedirectResponse Redirección al expediente con el resultado.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function update(Request $request, Mascota $mascota): RedirectResponse
+    {
+        $this->asegurarVeterinario($request);
+
+        $validated = $request->validate([
+            'antecedentes' => ['nullable', 'string', 'max:5000'],
+            'alergias' => ['nullable', 'string', 'max:5000'],
+            'enfermedades_cronicas' => ['nullable', 'string', 'max:5000'],
+            'observaciones' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $abierto = DB::transaction(function () use ($mascota, $validated): bool {
+            // Se bloquea la mascota para no abrir dos expedientes al mismo tiempo
+            Mascota::query()->whereKey($mascota->getKey())->lockForUpdate()->firstOrFail();
+
+            $expediente = $mascota->expediente()->firstOrCreate([], ['fecha_apertura' => now()]);
+            $expediente->update($validated);
+
+            return $expediente->wasRecentlyCreated;
+        });
+
+        return redirect()
+            ->route('expedientes.show', $mascota)
+            ->with('status', $abierto
+                ? 'El expediente se abrió correctamente.'
+                : 'Los datos del expediente se actualizaron correctamente.');
     }
 }

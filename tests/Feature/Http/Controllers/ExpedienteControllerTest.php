@@ -13,8 +13,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Pruebas del módulo de expedientes clínicos: lista, expediente, consultas,
- * vacunas y desparasitaciones.
+ * Pruebas del módulo de expedientes clínicos: lista, expediente, edición de datos,
+ * consultas, vacunas y desparasitaciones.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
@@ -61,7 +61,8 @@ class ExpedienteControllerTest extends TestCase
             ->assertOk()
             ->assertSee('Penicilina')
             ->assertDontSee('Registrar consulta')
-            ->assertDontSee('+ Registrar');
+            ->assertDontSee('+ Registrar')
+            ->assertDontSee('Editar datos');
     }
 
     public function test_show_displays_register_buttons_for_veterinarian(): void
@@ -73,7 +74,8 @@ class ExpedienteControllerTest extends TestCase
             ->get(route('expedientes.show', $mascota))
             ->assertOk()
             ->assertSee('Registrar consulta')
-            ->assertSee('+ Registrar');
+            ->assertSee('+ Registrar')
+            ->assertSee('Editar datos');
     }
 
     public function test_expediente_pages_require_authentication(): void
@@ -275,6 +277,56 @@ class ExpedienteControllerTest extends TestCase
 
         $this->assertDatabaseCount('vacunaciones', 0);
         $this->assertDatabaseCount('desparasitaciones', 0);
+    }
+
+    /* ------------------------------------------------------------------
+     | Editar datos del expediente
+     * ------------------------------------------------------------------ */
+
+    public function test_veterinarian_updates_expediente_without_changing_opening_date(): void
+    {
+        $mascota = $this->createMascota();
+        $expediente = $mascota->expediente()->create(['fecha_apertura' => '2026-01-15 09:00:00']);
+
+        $this->actingAs($this->createUser('Veterinario'))
+            ->put(route('expedientes.update', $mascota), [
+                'alergias' => 'Penicilina',
+                'antecedentes' => 'Cirugía de cadera en 2025',
+            ])
+            ->assertRedirect(route('expedientes.show', $mascota))
+            ->assertSessionHas('status', 'Los datos del expediente se actualizaron correctamente.');
+
+        $this->assertDatabaseHas('expedientes', [
+            'id' => $expediente->id,
+            'alergias' => 'Penicilina',
+            'antecedentes' => 'Cirugía de cadera en 2025',
+            'fecha_apertura' => '2026-01-15 09:00:00',
+        ]);
+    }
+
+    public function test_veterinarian_opens_expediente_from_edit_form(): void
+    {
+        $mascota = $this->createMascota();
+
+        $this->actingAs($this->createUser('Veterinario'))
+            ->put(route('expedientes.update', $mascota), ['alergias' => 'Polen'])
+            ->assertSessionHas('status', 'El expediente se abrió correctamente.');
+
+        $this->assertDatabaseCount('expedientes', 1);
+        $this->assertDatabaseHas('expedientes', ['mascota_id' => $mascota->id, 'alergias' => 'Polen']);
+    }
+
+    public function test_receptionist_cannot_edit_expediente(): void
+    {
+        $mascota = $this->createMascota();
+        $mascota->expediente()->create(['fecha_apertura' => now(), 'alergias' => 'Penicilina']);
+
+        $this->actingAs($this->createUser('Recepcionista'));
+
+        $this->get(route('expedientes.edit', $mascota))->assertForbidden();
+        $this->put(route('expedientes.update', $mascota), ['alergias' => ''])->assertForbidden();
+
+        $this->assertDatabaseHas('expedientes', ['mascota_id' => $mascota->id, 'alergias' => 'Penicilina']);
     }
 
     /* ------------------------------------------------------------------
