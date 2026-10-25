@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ConsultaController;
@@ -58,10 +59,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
         ->name('desparasitaciones.store');
 
-    // La administración de cuentas y roles está reservada al Administrador.
+    // La administración de cuentas, roles y auditoría está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
         Route::resource('usuarios', UserController::class)
             ->parameters(['usuarios' => 'user'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+        // Auditoría del sistema (solo lectura)
+        Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+        Route::get('/auditoria/{auditoria}', [AuditoriaController::class, 'show'])->name('auditoria.show');
     });
 });
