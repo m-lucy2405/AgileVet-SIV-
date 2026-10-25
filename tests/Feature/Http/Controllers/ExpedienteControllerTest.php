@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * Pruebas del módulo de expedientes clínicos: lista, expediente, edición de datos,
- * consultas, vacunas y desparasitaciones.
+ * consultas (registro y corrección), vacunas y desparasitaciones.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
@@ -202,6 +202,85 @@ class ExpedienteControllerTest extends TestCase
     }
 
     /* ------------------------------------------------------------------
+     | Corregir consultas
+     * ------------------------------------------------------------------ */
+
+    public function test_author_corrects_consulta_the_same_day_and_replaces_medications(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+        $consulta = $this->createConsulta($mascota, $veterinario);
+        $consulta->tratamientos()->create([
+            'medicamento' => 'Amoxicilina',
+            'dosis' => '1 tableta',
+            'frecuencia' => 'cada 8 horas',
+            'duracion' => '7 días',
+        ]);
+
+        // Dos horas después, el mismo día
+        $this->travel(2)->hours();
+
+        $this->actingAs($veterinario)
+            ->put(route('consultas.update', [$mascota, $consulta]), [
+                'motivo' => 'Control',
+                'diagnostico' => 'Otitis externa',
+                'tratamientos' => [
+                    ['medicamento' => 'Gotas óticas', 'dosis' => '3 gotas', 'frecuencia' => 'cada 12 horas', 'duracion' => '10 días'],
+                ],
+            ])
+            ->assertRedirect(route('expedientes.show', $mascota))
+            ->assertSessionHas('status', 'La consulta se corrigió correctamente.');
+
+        $consulta->refresh();
+        $this->assertSame('Otitis externa', $consulta->diagnostico);
+        $this->assertTrue($consulta->fueCorregida());
+        $this->assertDatabaseCount('tratamientos', 1);
+        $this->assertDatabaseHas('tratamientos', ['consulta_id' => $consulta->id, 'medicamento' => 'Gotas óticas']);
+        $this->assertDatabaseMissing('tratamientos', ['medicamento' => 'Amoxicilina']);
+    }
+
+    public function test_other_veterinarian_cannot_correct_consulta(): void
+    {
+        $mascota = $this->createMascota();
+        $consulta = $this->createConsulta($mascota, $this->createUser('Veterinario'));
+
+        $this->actingAs($this->createUser('Veterinario'));
+
+        $this->get(route('consultas.edit', [$mascota, $consulta]))->assertForbidden();
+        $this->put(route('consultas.update', [$mascota, $consulta]), ['motivo' => 'X', 'diagnostico' => 'Y'])
+            ->assertForbidden();
+
+        $this->assertSame('Sano', $consulta->fresh()->diagnostico);
+    }
+
+    public function test_consulta_cannot_be_corrected_the_next_day(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+        $consulta = $this->createConsulta($mascota, $veterinario);
+
+        // Al día siguiente la consulta queda cerrada
+        $this->travel(1)->days();
+
+        $this->actingAs($veterinario)
+            ->put(route('consultas.update', [$mascota, $consulta]), ['motivo' => 'X', 'diagnostico' => 'Y'])
+            ->assertForbidden();
+
+        $this->assertSame('Sano', $consulta->fresh()->diagnostico);
+    }
+
+    public function test_consulta_from_another_pet_returns_not_found(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $consulta = $this->createConsulta($this->createMascota('Firulais'), $veterinario);
+        $otraMascota = $this->createMascota('Michi');
+
+        $this->actingAs($veterinario)
+            ->get(route('consultas.edit', [$otraMascota, $consulta]))
+            ->assertNotFound();
+    }
+
+    /* ------------------------------------------------------------------
      | Vacunas y desparasitaciones
      * ------------------------------------------------------------------ */
 
@@ -363,6 +442,22 @@ class ExpedienteControllerTest extends TestCase
             'especie' => 'Canino',
             'sexo' => 'macho',
             'esterilizado' => false,
+        ]);
+    }
+
+    /**
+     * Crea una consulta registrada en este momento por el veterinario indicado.
+     */
+    private function createConsulta(Mascota $mascota, User $veterinario): Consulta
+    {
+        $expediente = $mascota->expediente()->firstOrCreate([], ['fecha_apertura' => now()]);
+
+        return Consulta::query()->create([
+            'expediente_id' => $expediente->id,
+            'veterinario_id' => $veterinario->id,
+            'fecha_consulta' => now(),
+            'motivo' => 'Control',
+            'diagnostico' => 'Sano',
         ]);
     }
 }

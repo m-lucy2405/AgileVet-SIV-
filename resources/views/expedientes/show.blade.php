@@ -17,7 +17,7 @@
         @endif
     </div>
 
-    {{-- Mensaje de éxito (al registrar o editar información del expediente) --}}
+    {{-- Mensaje de éxito (al registrar, corregir o editar información del expediente) --}}
     @if (session('status'))
         <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
@@ -162,9 +162,22 @@
             @forelse ($expediente->consultas as $consulta)
                 <article class="mb-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                     <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 class="font-semibold text-gray-800">{{ $consulta->motivo }}</h3>
-                        <span class="text-xs text-gray-500">
+                        <h3 class="font-semibold text-gray-800">
+                            {{ $consulta->motivo }}
+                            @if ($consulta->fueCorregida())
+                                <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600">
+                                    Corregida a las {{ $consulta->updated_at->format('H:i') }}
+                                </span>
+                            @endif
+                        </h3>
+                        <span class="flex items-center gap-3 text-xs text-gray-500">
                             {{ $consulta->fecha_consulta->format('d/m/Y H:i') }} · {{ $consulta->veterinario->nombre }}
+                            @if ($consulta->puedeSerCorregidaPor(auth()->user()))
+                                <a href="{{ route('consultas.edit', [$mascota, $consulta]) }}"
+                                    class="rounded-md px-2.5 py-1.5 font-medium text-primario-300 transition hover:bg-primario-500/10">
+                                    Corregir
+                                </a>
+                            @endif
                         </span>
                     </div>
 

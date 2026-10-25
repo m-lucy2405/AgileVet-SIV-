@@ -54,6 +54,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
         ->name('consultas.store');
 
+    // Corregir una consulta (solo quien la registró y el mismo día; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/consultas/{consulta}/editar', [ConsultaController::class, 'edit'])
+        ->name('consultas.edit');
+    Route::put('/expedientes/{mascota}/consultas/{consulta}', [ConsultaController::class, 'update'])
+        ->name('consultas.update');
+
     // Vacunas y desparasitaciones (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/vacunas/crear', [VacunacionController::class, 'create'])
         ->name('vacunaciones.create');
