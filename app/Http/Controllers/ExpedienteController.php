@@ -11,14 +11,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Muestra la lista de expedientes clínicos, el expediente de cada mascota
- * y permite a los veterinarios actualizar sus datos generales.
+ * Muestra la lista de expedientes clínicos, el expediente de cada mascota y su
+ * historial de consultas, y permite a los veterinarios actualizar sus datos generales.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
 class ExpedienteController extends Controller
 {
     use RequiereVeterinario;
+
+    /**
+     * Consultas recientes que se muestran en el expediente.
+     */
+    private const CONSULTAS_RECIENTES = 1;
+
+    /**
+     * Consultas por página en el historial completo.
+     */
+    private const CONSULTAS_POR_PAGINA = 10;
 
     /**
      * Lista las mascotas con su propietario y el estado de su expediente.
@@ -58,10 +68,10 @@ class ExpedienteController extends Controller
     }
 
     /**
-     * Muestra el expediente completo de una mascota.
+     * Muestra el expediente de una mascota con sus consultas más recientes.
      *
      * @param  Mascota  $mascota  Mascota resuelta mediante route model binding.
-     * @return View Vista con los datos clínicos y el historial de la mascota.
+     * @return View Vista con los datos clínicos y el historial reciente de la mascota.
      *
      * @author Equipo de desarrollo AgileVet-SIV
      */
@@ -69,11 +79,18 @@ class ExpedienteController extends Controller
     {
         $mascota->load([
             'cliente',
-            'expediente.consultas.veterinario',
-            'expediente.consultas.tratamientos',
             'expediente.vacunaciones',
             'expediente.desparasitaciones',
         ]);
+
+        $expediente = $mascota->expediente;
+
+        $consultas = $expediente
+            ? $expediente->consultas()
+                ->with(['veterinario', 'tratamientos'])
+                ->limit(self::CONSULTAS_RECIENTES)
+                ->get()
+            : collect();
 
         $proximasCitas = $mascota->citas()
             ->with('veterinario')
@@ -84,8 +101,52 @@ class ExpedienteController extends Controller
 
         return view('expedientes.show', [
             'mascota' => $mascota,
-            'expediente' => $mascota->expediente,
+            'expediente' => $expediente,
+            'consultas' => $consultas,
+            'totalConsultas' => $expediente?->consultas()->count() ?? 0,
             'proximasCitas' => $proximasCitas,
+        ]);
+    }
+
+    /**
+     * Muestra el historial completo de consultas de una mascota, con búsqueda por
+     * motivo o diagnóstico. Disponible para cualquier usuario con sesión.
+     *
+     * @param  Request  $request  Petición con el texto de búsqueda opcional.
+     * @param  Mascota  $mascota  Mascota resuelta mediante route model binding.
+     * @return View Vista con el historial paginado.
+     *
+     * @author Equipo de desarrollo AgileVet-SIV
+     */
+    public function consultas(Request $request, Mascota $mascota): View
+    {
+        $filtros = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $buscar = trim($filtros['buscar'] ?? '');
+
+        $mascota->load(['cliente', 'expediente']);
+        $expediente = $mascota->expediente;
+
+        $consultas = $expediente
+            ? $expediente->consultas()
+                ->with(['veterinario', 'tratamientos'])
+                ->when($buscar !== '', function (Builder $query) use ($buscar): void {
+                    $query->where(function (Builder $query) use ($buscar): void {
+                        $query->where('motivo', 'like', "%{$buscar}%")
+                            ->orWhere('diagnostico', 'like', "%{$buscar}%");
+                    });
+                })
+                ->paginate(self::CONSULTAS_POR_PAGINA)
+                ->withQueryString()
+            : null;
+
+        return view('expedientes.consultas', [
+            'mascota' => $mascota,
+            'expediente' => $expediente,
+            'consultas' => $consultas,
+            'buscar' => $buscar,
         ]);
     }
 

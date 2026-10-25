@@ -13,8 +13,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Pruebas del módulo de expedientes clínicos: lista, expediente, edición de datos,
- * consultas (registro y corrección), vacunas y desparasitaciones.
+ * Pruebas del módulo de expedientes clínicos: lista, expediente, historial de consultas,
+ * edición de datos, consultas (registro y corrección), vacunas y desparasitaciones.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
@@ -84,6 +84,121 @@ class ExpedienteControllerTest extends TestCase
 
         $this->get(route('expedientes.index'))->assertRedirect(route('login'));
         $this->get(route('expedientes.show', $mascota))->assertRedirect(route('login'));
+    }
+
+    /* ------------------------------------------------------------------
+     | Historial de consultas
+     * ------------------------------------------------------------------ */
+
+    public function test_show_displays_only_the_most_recent_consulta_and_history_button(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+        $this->createConsulta($mascota, $veterinario, 'Consulta 1', 'Sano', '2026-10-01 09:00:00');
+        $this->createConsulta($mascota, $veterinario, 'Consulta 2', 'Sano', '2026-10-05 09:00:00');
+        $this->createConsulta($mascota, $veterinario, 'Consulta 3', 'Sano', '2026-10-10 09:00:00');
+
+        $this->actingAs($this->createUser('Recepcionista'))
+            ->get(route('expedientes.show', $mascota))
+            ->assertOk()
+            ->assertSee('Consultas (3)')
+            ->assertSee('Se muestra la más reciente.')
+            ->assertSee('Ver historial completo')
+            ->assertSee('Consulta 3')
+            ->assertDontSee('Consulta 2')
+            ->assertDontSee('Consulta 1');
+    }
+
+    public function test_receptionist_sees_full_history(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+        $this->createConsulta($mascota, $veterinario, 'Consulta 1', 'Sano', '2026-10-01 09:00:00');
+        $this->createConsulta($mascota, $veterinario, 'Consulta 2', 'Sano', '2026-10-05 09:00:00');
+        $this->createConsulta($mascota, $veterinario, 'Consulta 3', 'Sano', '2026-10-10 09:00:00');
+
+        $this->actingAs($this->createUser('Recepcionista'))
+            ->get(route('expedientes.consultas', $mascota))
+            ->assertOk()
+            ->assertSee('Consulta 1')
+            ->assertSee('Consulta 2')
+            ->assertSee('Consulta 3')
+            ->assertDontSee('Corregir');
+    }
+
+    public function test_history_filters_by_motivo_or_diagnostico(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+        $this->createConsulta($mascota, $veterinario, 'Vacunación anual', 'Apto para vacunar', '2026-10-01 09:00:00');
+        $this->createConsulta($mascota, $veterinario, 'Rascado de oreja', 'Otitis externa', '2026-10-05 09:00:00');
+
+        $this->actingAs($veterinario);
+
+        // Por diagnóstico
+        $this->get(route('expedientes.consultas', ['mascota' => $mascota, 'buscar' => 'otitis']))
+            ->assertOk()
+            ->assertSee('Rascado de oreja')
+            ->assertDontSee('Vacunación anual');
+
+        // Por motivo
+        $this->get(route('expedientes.consultas', ['mascota' => $mascota, 'buscar' => 'vacunación']))
+            ->assertOk()
+            ->assertSee('Vacunación anual')
+            ->assertDontSee('Rascado de oreja');
+    }
+
+    public function test_history_paginates_ten_per_page(): void
+    {
+        $veterinario = $this->createUser('Veterinario');
+        $mascota = $this->createMascota();
+
+        // Números con dos cifras para que "Control número 02" no esté dentro de "Control número 12"
+        foreach (range(1, 12) as $numero) {
+            $this->createConsulta(
+                $mascota,
+                $veterinario,
+                sprintf('Control número %02d', $numero),
+                'Sano',
+                CarbonImmutable::parse('2026-09-01 09:00:00')->addDays($numero)->toDateTimeString(),
+            );
+        }
+
+        $this->actingAs($veterinario);
+
+        // Primera página: de la 12 a la 03
+        $this->get(route('expedientes.consultas', $mascota))
+            ->assertOk()
+            ->assertSee('Mostrando 1–10 de 12 consultas')
+            ->assertSee('Control número 12')
+            ->assertSee('Control número 03')
+            ->assertDontSee('Control número 02')
+            ->assertDontSee('Control número 01');
+
+        // Segunda página: la 02 y la 01
+        $this->get(route('expedientes.consultas', ['mascota' => $mascota, 'page' => 2]))
+            ->assertOk()
+            ->assertSee('Mostrando 11–12 de 12 consultas')
+            ->assertSee('Control número 02')
+            ->assertSee('Control número 01')
+            ->assertDontSee('Control número 03');
+    }
+
+    public function test_history_without_expediente_shows_message(): void
+    {
+        $mascota = $this->createMascota();
+
+        $this->actingAs($this->createUser('Recepcionista'))
+            ->get(route('expedientes.consultas', $mascota))
+            ->assertOk()
+            ->assertSee('todavía no tiene expediente clínico ni consultas registradas');
+    }
+
+    public function test_history_requires_authentication(): void
+    {
+        $mascota = $this->createMascota();
+
+        $this->get(route('expedientes.consultas', $mascota))->assertRedirect(route('login'));
     }
 
     /* ------------------------------------------------------------------
@@ -447,17 +562,23 @@ class ExpedienteControllerTest extends TestCase
 
     /**
      * Crea una consulta registrada en este momento por el veterinario indicado.
+     * El motivo, el diagnóstico y la fecha de la consulta se pueden personalizar.
      */
-    private function createConsulta(Mascota $mascota, User $veterinario): Consulta
-    {
+    private function createConsulta(
+        Mascota $mascota,
+        User $veterinario,
+        string $motivo = 'Control',
+        string $diagnostico = 'Sano',
+        ?string $fechaConsulta = null,
+    ): Consulta {
         $expediente = $mascota->expediente()->firstOrCreate([], ['fecha_apertura' => now()]);
 
         return Consulta::query()->create([
             'expediente_id' => $expediente->id,
             'veterinario_id' => $veterinario->id,
-            'fecha_consulta' => now(),
-            'motivo' => 'Control',
-            'diagnostico' => 'Sano',
+            'fecha_consulta' => $fechaConsulta ?? now(),
+            'motivo' => $motivo,
+            'diagnostico' => $diagnostico,
         ]);
     }
 }

@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     // Expedientes clínicos (consulta para cualquier usuario con sesión)
     Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
     Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
+    Route::get('/expedientes/{mascota}/consultas', [ExpedienteController::class, 'consultas'])
+        ->name('expedientes.consultas');
 
     // Editar los datos generales del expediente (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/editar', [ExpedienteController::class, 'edit'])
