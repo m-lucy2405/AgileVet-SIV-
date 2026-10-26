@@ -6,6 +6,7 @@ use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacunacionController;
@@ -74,6 +75,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
         ->name('desparasitaciones.store');
 
+    // Inventario: catálogo visible para todos los usuarios con sesión
+    Route::get('/inventario', [ProductoController::class, 'index'])->name('productos.index');
+
     // Reportes (el controlador verifica qué rol puede ver cada uno)
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('/reportes/citas', [ReporteController::class, 'citas'])->name('reportes.citas');
@@ -81,7 +85,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/diagnosticos', [ReporteController::class, 'diagnosticos'])->name('reportes.diagnosticos');
     Route::get('/reportes/dosis', [ReporteController::class, 'dosis'])->name('reportes.dosis');
 
-    // La administración de cuentas, roles y auditoría está reservada al Administrador.
+    // La administración de cuentas, roles, auditoría e inventario está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
         Route::resource('usuarios', UserController::class)
             ->parameters(['usuarios' => 'user'])
@@ -90,5 +94,12 @@ Route::middleware('auth')->group(function () {
         // Auditoría del sistema (solo lectura)
         Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
         Route::get('/auditoria/{auditoria}', [AuditoriaController::class, 'show'])->name('auditoria.show');
+
+        // Inventario: crear, editar, activar y desactivar productos
+        Route::get('/inventario/productos/crear', [ProductoController::class, 'create'])->name('productos.create');
+        Route::post('/inventario/productos', [ProductoController::class, 'store'])->name('productos.store');
+        Route::get('/inventario/productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
+        Route::put('/inventario/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+        Route::patch('/inventario/productos/{producto}/estado', [ProductoController::class, 'cambiarEstado'])->name('productos.estado');
     });
 });
