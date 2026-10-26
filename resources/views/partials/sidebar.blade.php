@@ -20,7 +20,7 @@
     if ($esAdministrador) {
         $secciones['Administración'] = [
             ['texto' => 'Usuarios', 'url' => route('usuarios.index'), 'ruta' => 'usuarios*'],
-            ['texto' => 'Auditoría', 'url' => '#', 'ruta' => 'auditoria*'],
+            ['texto' => 'Auditoría', 'url' => route('auditoria.index'), 'ruta' => 'auditoria*'],
         ];
     }
 @endphp

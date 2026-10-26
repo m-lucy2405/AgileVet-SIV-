@@ -17,7 +17,7 @@
         @endif
     </div>
 
-    {{-- Mensaje de éxito (al registrar una consulta, vacuna o desparasitación) --}}
+    {{-- Mensaje de éxito (al registrar, corregir o editar información del expediente) --}}
     @if (session('status'))
         <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ session('status') }}
@@ -88,6 +88,7 @@
             consulta, vacuna o desparasitación.
             @if ($esVeterinario)
                 <div class="mt-3 flex flex-wrap gap-3">
+                    <a href="{{ route('expedientes.edit', $mascota) }}" class="btn-secundario">Abrir expediente</a>
                     <a href="{{ route('vacunaciones.create', $mascota) }}" class="btn-secundario">+ Registrar vacuna</a>
                     <a href="{{ route('desparasitaciones.create', $mascota) }}" class="btn-secundario">+ Registrar desparasitación</a>
                 </div>
@@ -104,8 +105,18 @@
 
         {{-- Datos generales del expediente --}}
         <section class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 class="text-base font-semibold text-gray-800">Expediente clínico</h2>
-            <p class="mt-1 text-xs text-gray-500">Abierto el {{ $expediente->fecha_apertura->format('d/m/Y') }}</p>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-800">Expediente clínico</h2>
+                    <p class="mt-1 text-xs text-gray-500">Abierto el {{ $expediente->fecha_apertura->format('d/m/Y') }}</p>
+                </div>
+                @if ($esVeterinario)
+                    <a href="{{ route('expedientes.edit', $mascota) }}"
+                        class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
+                        Editar datos
+                    </a>
+                @endif
+            </div>
 
             <dl class="mt-4 grid gap-4 text-sm md:grid-cols-3">
                 @foreach ([
@@ -144,65 +155,27 @@
     </section>
 
     @if ($expediente)
-        {{-- Historial de consultas --}}
+        {{-- Consulta más reciente --}}
         <section class="mb-6">
-            <h2 class="mb-3 text-base font-semibold text-gray-800">Consultas</h2>
-
-            @forelse ($expediente->consultas as $consulta)
-                <article class="mb-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 class="font-semibold text-gray-800">{{ $consulta->motivo }}</h3>
-                        <span class="text-xs text-gray-500">
-                            {{ $consulta->fecha_consulta->format('d/m/Y H:i') }} · {{ $consulta->veterinario->nombre }}
-                        </span>
-                    </div>
-
-                    <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-gray-500">Peso</dt>
-                            <dd class="text-gray-800">{{ $consulta->peso_kg ? $consulta->peso_kg . ' kg' : 'No registrado' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-gray-500">Temperatura</dt>
-                            <dd class="text-gray-800">{{ $consulta->temperatura_c ? $consulta->temperatura_c . ' °C' : 'No registrada' }}</dd>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <dt class="text-xs uppercase tracking-wide text-gray-500">Diagnóstico</dt>
-                            <dd class="whitespace-pre-line text-gray-800">{{ $consulta->diagnostico }}</dd>
-                        </div>
-                        @if ($consulta->tratamiento_indicado)
-                            <div class="sm:col-span-2">
-                                <dt class="text-xs uppercase tracking-wide text-gray-500">Tratamiento indicado</dt>
-                                <dd class="whitespace-pre-line text-gray-800">{{ $consulta->tratamiento_indicado }}</dd>
-                            </div>
-                        @endif
-                    </dl>
-
-                    @if ($consulta->tratamientos->isNotEmpty())
-                        <div class="mt-4 overflow-x-auto">
-                            <table class="w-full min-w-[520px] text-left text-sm">
-                                <thead class="text-xs uppercase tracking-wide text-gray-500">
-                                    <tr>
-                                        <th class="py-2 pr-3 font-semibold">Medicamento</th>
-                                        <th class="py-2 pr-3 font-semibold">Dosis</th>
-                                        <th class="py-2 pr-3 font-semibold">Frecuencia</th>
-                                        <th class="py-2 font-semibold">Duración</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    @foreach ($consulta->tratamientos as $tratamiento)
-                                        <tr>
-                                            <td class="py-2 pr-3 text-gray-800">{{ $tratamiento->medicamento }}</td>
-                                            <td class="py-2 pr-3 text-gray-600">{{ $tratamiento->dosis }}</td>
-                                            <td class="py-2 pr-3 text-gray-600">{{ $tratamiento->frecuencia }}</td>
-                                            <td class="py-2 text-gray-600">{{ $tratamiento->duracion }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-800">Consultas ({{ $totalConsultas }})</h2>
+                    @if ($totalConsultas > $consultas->count())
+                        <p class="text-xs text-gray-500">
+                            {{ $consultas->count() === 1 ? 'Se muestra la más reciente.' : 'Se muestran las ' . $consultas->count() . ' más recientes.' }}
+                        </p>
                     @endif
-                </article>
+                </div>
+
+                @if ($totalConsultas > 0)
+                    <a href="{{ route('expedientes.consultas', $mascota) }}" class="btn-secundario">
+                        Ver historial completo
+                    </a>
+                @endif
+            </div>
+
+            @forelse ($consultas as $consulta)
+                @include('consultas._tarjeta', ['consulta' => $consulta])
             @empty
                 <p class="rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-500 shadow-sm">
                     Todavía no hay consultas registradas.
