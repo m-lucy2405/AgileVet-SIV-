@@ -41,12 +41,26 @@ Route::middleware('auth')->group(function () {
     // Expedientes clínicos (consulta para cualquier usuario con sesión)
     Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
     Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
+    Route::get('/expedientes/{mascota}/consultas', [ExpedienteController::class, 'consultas'])
+        ->name('expedientes.consultas');
+
+    // Editar los datos generales del expediente (solo veterinarios; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/editar', [ExpedienteController::class, 'edit'])
+        ->name('expedientes.edit');
+    Route::put('/expedientes/{mascota}', [ExpedienteController::class, 'update'])
+        ->name('expedientes.update');
 
     // Consultas (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/consultas/crear', [ConsultaController::class, 'create'])
         ->name('consultas.create');
     Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
         ->name('consultas.store');
+
+    // Corregir una consulta (solo quien la registró y el mismo día; el controlador lo verifica)
+    Route::get('/expedientes/{mascota}/consultas/{consulta}/editar', [ConsultaController::class, 'edit'])
+        ->name('consultas.edit');
+    Route::put('/expedientes/{mascota}/consultas/{consulta}', [ConsultaController::class, 'update'])
+        ->name('consultas.update');
 
     // Vacunas y desparasitaciones (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/vacunas/crear', [VacunacionController::class, 'create'])

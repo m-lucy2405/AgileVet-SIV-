@@ -65,4 +65,29 @@ class Consulta extends Model
     {
         return $this->hasMany(Tratamiento::class);
     }
+
+    /**
+     * Indica si el usuario puede corregir la consulta: debe ser el veterinario
+     * que la registró y hacerlo el mismo día del registro.
+     *
+     * @param  User|null  $usuario  Usuario autenticado.
+     * @return bool Verdadero si la corrección está permitida.
+     */
+    public function puedeSerCorregidaPor(?User $usuario): bool
+    {
+        return $usuario !== null
+            && $usuario->role?->nombre === 'Veterinario'
+            && (int) $this->veterinario_id === (int) $usuario->id
+            && $this->created_at->isToday();
+    }
+
+    /**
+     * Indica si la consulta fue corregida después de registrarse.
+     *
+     * @return bool Verdadero si la última modificación es posterior al registro.
+     */
+    public function fueCorregida(): bool
+    {
+        return $this->updated_at !== null && $this->updated_at->gt($this->created_at);
+    }
 }
