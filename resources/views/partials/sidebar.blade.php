@@ -13,7 +13,7 @@
         'Negocio' => [
             ['texto' => 'Inventario', 'url' => '#', 'ruta' => 'inventario*'],
             ['texto' => 'Ventas', 'url' => '#', 'ruta' => 'ventas*'],
-            ['texto' => 'Reportes', 'url' => '#', 'ruta' => 'reportes*'],
+            ['texto' => 'Reportes', 'url' => route('reportes.index'), 'ruta' => 'reportes*'],
         ],
     ];
 
