@@ -74,7 +74,7 @@
     {{-- Lista --}}
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[820px] text-left text-sm">
+            <table class="w-full min-w-[900px] text-left text-sm">
                 <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                     <tr>
                         <th class="px-4 py-3 font-semibold">Código</th>
@@ -126,6 +126,12 @@
                             </td>
                             @if ($esAdministrador)
                                 <td class="whitespace-nowrap px-4 py-3 text-right">
+                                    @if ($producto->activo)
+                                        <a href="{{ route('movimientos.create', $producto) }}"
+                                            class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
+                                            Movimiento
+                                        </a>
+                                    @endif
                                     <a href="{{ route('productos.edit', $producto) }}"
                                         class="rounded-md px-2.5 py-1.5 text-xs font-medium text-primario-300 transition hover:bg-primario-500/10">
                                         Editar

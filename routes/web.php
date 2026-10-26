@@ -6,6 +6,7 @@ use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\MovimientoInventarioController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
@@ -101,5 +102,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventario/productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
         Route::put('/inventario/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
         Route::patch('/inventario/productos/{producto}/estado', [ProductoController::class, 'cambiarEstado'])->name('productos.estado');
+
+        // Inventario: entradas, salidas y ajustes
+        Route::get('/inventario/productos/{producto}/movimientos/crear', [MovimientoInventarioController::class, 'create'])
+            ->name('movimientos.create');
+        Route::post('/inventario/productos/{producto}/movimientos', [MovimientoInventarioController::class, 'store'])
+            ->name('movimientos.store');
     });
 });
