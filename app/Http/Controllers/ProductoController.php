@@ -69,6 +69,53 @@ class ProductoController extends Controller
     }
 
     /**
+     * Kárdex del producto: datos, alertas y movimientos con filtros por tipo y fechas.
+     */
+    public function show(Request $request, Producto $producto): View
+    {
+        $filtros = $request->validate([
+            'tipo' => ['nullable', Rule::in(array_keys(MovimientoInventario::TIPOS))],
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
+        ], [
+            'hasta.after_or_equal' => 'La fecha final debe ser igual o posterior a la fecha inicial.',
+        ]);
+
+        $movimientos = $producto->movimientos()
+            ->with('usuario:id,nombre')
+            ->when($filtros['tipo'] ?? null, fn ($query, $tipo) => $query->where('tipo', $tipo))
+            ->when($filtros['desde'] ?? null, fn ($query, $desde) => $query->whereDate('fecha_movimiento', '>=', $desde))
+            ->when($filtros['hasta'] ?? null, fn ($query, $hasta) => $query->whereDate('fecha_movimiento', '<=', $hasta));
+
+        // Totales de lo filtrado: cuánto entró y cuánto salió según la variación del stock.
+        $todos = (clone $movimientos)->get([
+            'tipo',
+            'cantidad',
+            'stock_anterior',
+            'stock_nuevo',
+        ]);
+
+        $totales = [
+            'entradas' => $todos
+                ->filter(fn ($m) => $m->stock_nuevo > $m->stock_anterior)
+                ->sum('cantidad'),
+            'salidas' => $todos
+                ->filter(fn ($m) => $m->stock_nuevo < $m->stock_anterior)
+                ->sum('cantidad'),
+            'cantidad' => $todos->count(),
+        ];
+
+        return view('inventario.show', [
+            'producto' => $producto->load('categoria'),
+            'movimientos' => $movimientos->paginate(20)->withQueryString(),
+            'totales' => $totales,
+            'filtros' => $filtros,
+            'tipos' => MovimientoInventario::TIPOS,
+            'esAdministrador' => $request->user()?->role?->nombre === 'Administrador',
+        ]);
+    }
+
+    /**
      * Formulario para crear un producto.
      */
     public function create(): View
@@ -92,10 +139,20 @@ class ProductoController extends Controller
         unset($validated['stock_inicial']);
 
         DB::transaction(function () use ($validated, $stockInicial, $inventario, $request): void {
-            $producto = Producto::query()->create([...$validated, 'stock' => 0, 'activo' => true]);
+            $producto = Producto::query()->create([
+                ...$validated,
+                'stock' => 0,
+                'activo' => true,
+            ]);
 
             if ($stockInicial > 0) {
-                $inventario->registrar($producto, MovimientoInventario::ENTRADA, $stockInicial, 'Inventario inicial', $request->user());
+                $inventario->registrar(
+                    $producto,
+                    MovimientoInventario::ENTRADA,
+                    $stockInicial,
+                    'Inventario inicial',
+                    $request->user()
+                );
             }
         });
 
@@ -120,7 +177,9 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto): RedirectResponse
     {
-        $producto->update($request->validate($this->reglas($producto), $this->mensajes()));
+        $producto->update(
+            $request->validate($this->reglas($producto), $this->mensajes())
+        );
 
         return redirect()
             ->route('productos.index')
@@ -136,9 +195,12 @@ class ProductoController extends Controller
 
         return redirect()
             ->back()
-            ->with('status', $producto->activo
-                ? "El producto «{$producto->nombre}» se activó."
-                : "El producto «{$producto->nombre}» se desactivó.");
+            ->with(
+                'status',
+                $producto->activo
+                    ? "El producto «{$producto->nombre}» se activó."
+                    : "El producto «{$producto->nombre}» se desactivó."
+            );
     }
 
     /**

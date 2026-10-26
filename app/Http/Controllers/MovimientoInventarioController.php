@@ -79,7 +79,7 @@ class MovimientoInventarioController extends Controller
         );
 
         return redirect()
-            ->route('productos.index')
+            ->route('productos.show', $producto)
             ->with('status', sprintf(
                 '%s registrada: %s. Stock de «%s»: %d → %d %s.',
                 $movimiento->nombreTipo(),

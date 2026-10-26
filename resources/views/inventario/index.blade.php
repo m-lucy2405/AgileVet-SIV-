@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('titulo', 'Inventario')
@@ -98,7 +99,10 @@
                         <tr class="transition hover:bg-gray-50 {{ $producto->activo ? '' : 'opacity-60' }}">
                             <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ $producto->codigo }}</td>
                             <td class="px-4 py-3">
-                                <span class="font-medium text-gray-800">{{ $producto->nombre }}</span>
+                                <a href="{{ route('productos.show', $producto) }}"
+                                   class="font-medium text-gray-800 hover:text-primario-300 hover:underline">
+                                    {{ $producto->nombre }}
+                                </a>
                                 @unless ($producto->activo)
                                     <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Inactivo</span>
                                 @endunless

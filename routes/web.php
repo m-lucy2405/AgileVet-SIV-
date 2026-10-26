@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\AuditoriaController;
@@ -29,6 +30,8 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
+
+    // Citas
     Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
     Route::get('/citas/calendario/eventos', [CitaController::class, 'calendarEvents'])
         ->name('citas.calendario.eventos');
@@ -43,69 +46,108 @@ Route::middleware('auth')->group(function () {
         ->name('citas.recordatorios');
 
     // Expedientes clínicos (consulta para cualquier usuario con sesión)
-    Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
-    Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])->name('expedientes.show');
+    Route::get('/expedientes', [ExpedienteController::class, 'index'])
+        ->name('expedientes.index');
+
+    Route::get('/expedientes/{mascota}', [ExpedienteController::class, 'show'])
+        ->name('expedientes.show');
+
     Route::get('/expedientes/{mascota}/consultas', [ExpedienteController::class, 'consultas'])
         ->name('expedientes.consultas');
 
     // Editar los datos generales del expediente (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/editar', [ExpedienteController::class, 'edit'])
         ->name('expedientes.edit');
+
     Route::put('/expedientes/{mascota}', [ExpedienteController::class, 'update'])
         ->name('expedientes.update');
 
     // Consultas (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/consultas/crear', [ConsultaController::class, 'create'])
         ->name('consultas.create');
+
     Route::post('/expedientes/{mascota}/consultas', [ConsultaController::class, 'store'])
         ->name('consultas.store');
 
     // Corregir una consulta (solo quien la registró y el mismo día; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/consultas/{consulta}/editar', [ConsultaController::class, 'edit'])
         ->name('consultas.edit');
+
     Route::put('/expedientes/{mascota}/consultas/{consulta}', [ConsultaController::class, 'update'])
         ->name('consultas.update');
 
     // Vacunas y desparasitaciones (solo veterinarios; el controlador lo verifica)
     Route::get('/expedientes/{mascota}/vacunas/crear', [VacunacionController::class, 'create'])
         ->name('vacunaciones.create');
+
     Route::post('/expedientes/{mascota}/vacunas', [VacunacionController::class, 'store'])
         ->name('vacunaciones.store');
+
     Route::get('/expedientes/{mascota}/desparasitaciones/crear', [DesparasitacionController::class, 'create'])
         ->name('desparasitaciones.create');
+
     Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
         ->name('desparasitaciones.store');
 
     // Inventario: catálogo visible para todos los usuarios con sesión
-    Route::get('/inventario', [ProductoController::class, 'index'])->name('productos.index');
+    Route::get('/inventario', [ProductoController::class, 'index'])
+        ->name('productos.index');
+
+    // Kárdex del producto: disponible para cualquier usuario autenticado
+    Route::get('/inventario/productos/{producto}', [ProductoController::class, 'show'])
+        ->whereNumber('producto')
+        ->name('productos.show');
 
     // Reportes (el controlador verifica qué rol puede ver cada uno)
-    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::get('/reportes/citas', [ReporteController::class, 'citas'])->name('reportes.citas');
-    Route::get('/reportes/consultas', [ReporteController::class, 'consultas'])->name('reportes.consultas');
-    Route::get('/reportes/diagnosticos', [ReporteController::class, 'diagnosticos'])->name('reportes.diagnosticos');
-    Route::get('/reportes/dosis', [ReporteController::class, 'dosis'])->name('reportes.dosis');
+    Route::get('/reportes', [ReporteController::class, 'index'])
+        ->name('reportes.index');
+
+    Route::get('/reportes/citas', [ReporteController::class, 'citas'])
+        ->name('reportes.citas');
+
+    Route::get('/reportes/consultas', [ReporteController::class, 'consultas'])
+        ->name('reportes.consultas');
+
+    Route::get('/reportes/diagnosticos', [ReporteController::class, 'diagnosticos'])
+        ->name('reportes.diagnosticos');
+
+    Route::get('/reportes/dosis', [ReporteController::class, 'dosis'])
+        ->name('reportes.dosis');
 
     // La administración de cuentas, roles, auditoría e inventario está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
+        // Administración de usuarios
         Route::resource('usuarios', UserController::class)
             ->parameters(['usuarios' => 'user'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
         // Auditoría del sistema (solo lectura)
-        Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
-        Route::get('/auditoria/{auditoria}', [AuditoriaController::class, 'show'])->name('auditoria.show');
+        Route::get('/auditoria', [AuditoriaController::class, 'index'])
+            ->name('auditoria.index');
+
+        Route::get('/auditoria/{auditoria}', [AuditoriaController::class, 'show'])
+            ->name('auditoria.show');
 
         // Inventario: crear, editar, activar y desactivar productos
-        Route::get('/inventario/productos/crear', [ProductoController::class, 'create'])->name('productos.create');
-        Route::post('/inventario/productos', [ProductoController::class, 'store'])->name('productos.store');
-        Route::get('/inventario/productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
-        Route::put('/inventario/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-        Route::patch('/inventario/productos/{producto}/estado', [ProductoController::class, 'cambiarEstado'])->name('productos.estado');
+        Route::get('/inventario/productos/crear', [ProductoController::class, 'create'])
+            ->name('productos.create');
+
+        Route::post('/inventario/productos', [ProductoController::class, 'store'])
+            ->name('productos.store');
+
+        Route::get('/inventario/productos/{producto}/editar', [ProductoController::class, 'edit'])
+            ->name('productos.edit');
+
+        Route::put('/inventario/productos/{producto}', [ProductoController::class, 'update'])
+            ->name('productos.update');
+
+        Route::patch('/inventario/productos/{producto}/estado', [ProductoController::class, 'cambiarEstado'])
+            ->name('productos.estado');
 
         // Inventario: entradas, salidas y ajustes
         Route::get('/inventario/productos/{producto}/movimientos/crear', [MovimientoInventarioController::class, 'create'])
             ->name('movimientos.create');
+
         Route::post('/inventario/productos/{producto}/movimientos', [MovimientoInventarioController::class, 'store'])
             ->name('movimientos.store');
     });
