@@ -13,6 +13,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacunacionController;
+use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -44,6 +45,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
     Route::get('/citas/recordatorios', [CitaController::class, 'remindersPage'])
         ->name('citas.recordatorios');
+
+    Route::middleware('role:Administrador,Recepcionista')->group(function () {
+        Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        Route::get('/ventas/crear', [VentaController::class, 'create'])->name('ventas.create');
+        Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
+        Route::get('/ventas/{venta}/comprobante', [VentaController::class, 'comprobante'])
+            ->whereNumber('venta')
+            ->name('ventas.comprobante');
+    });
 
     // Expedientes clínicos (consulta para cualquier usuario con sesión)
     Route::get('/expedientes', [ExpedienteController::class, 'index'])

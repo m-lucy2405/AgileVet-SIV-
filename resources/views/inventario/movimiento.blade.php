@@ -87,6 +87,38 @@
             @enderror
         </div>
 
+        <fieldset class="grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-3">
+            <legend class="etiqueta">Datos del lote para entradas (opcionales)</legend>
+            <div>
+                <label for="codigo_lote" class="etiqueta">Código del lote</label>
+                <input id="codigo_lote" name="codigo_lote" type="text" maxlength="100" class="campo"
+                    value="{{ old('codigo_lote') }}">
+                @error('codigo_lote')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label for="fecha_caducidad" class="etiqueta">Fecha de caducidad</label>
+                <input id="fecha_caducidad" name="fecha_caducidad" type="date" class="campo"
+                    value="{{ old('fecha_caducidad') }}">
+                @error('fecha_caducidad')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label for="costo_compra" class="etiqueta">Costo unitario ($)</label>
+                <input id="costo_compra" name="costo_compra" type="number" min="0" step="0.01" class="campo"
+                    value="{{ old('costo_compra', $producto->precio_compra) }}">
+                @error('costo_compra')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+            <p class="text-xs text-gray-500 sm:col-span-3">
+                Si no indicas código, se generará uno automáticamente. Las salidas administrativas retiran stock de lotes
+                en orden de caducidad; solo las ventas bloquean lotes vencidos.
+            </p>
+        </fieldset>
+
         <div class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <a href="{{ route('productos.index') }}" class="btn-secundario">Cancelar</a>
             <button type="submit" class="btn-primario">Registrar movimiento</button>

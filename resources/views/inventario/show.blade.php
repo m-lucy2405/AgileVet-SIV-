@@ -28,9 +28,9 @@
             Este producto está <strong>inactivo</strong>: no aparece en el catálogo y no admite movimientos.
         </div>
     @endif
-    @if ($producto->estaVencido())
+    @if ($producto->lotes->contains(fn ($lote) => $lote->fecha_caducidad?->lt(today()) && $lote->cantidad_disponible > 0))
         <div role="alert" class="mb-4 rounded-lg border border-red-500/40 bg-red-50 px-4 py-3 text-sm text-red-600">
-            <strong>Producto vencido</strong> el {{ $producto->fecha_vencimiento->format('d/m/Y') }}. No debe venderse ni aplicarse.
+            <strong>Hay lotes vencidos en existencia.</strong> No deben venderse ni aplicarse.
         </div>
     @endif
     @if ($producto->tieneStockBajo())
@@ -69,12 +69,45 @@
                 <dd class="text-gray-800">$ {{ number_format($producto->precio_venta, 2) }}</dd>
             </div>
             <div>
-                <dt class="text-xs uppercase tracking-wide text-gray-500">Vencimiento</dt>
-                <dd class="{{ $producto->estaVencido() ? 'font-semibold text-red-600' : 'text-gray-800' }}">
-                    {{ $producto->fecha_vencimiento?->format('d/m/Y') ?? 'Sin fecha' }}
-                </dd>
+                <dt class="text-xs uppercase tracking-wide text-gray-500">Lotes con existencias</dt>
+                <dd class="text-gray-800">{{ $producto->lotes->count() }}</dd>
             </div>
         </dl>
+    </section>
+
+    <section class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h2 class="border-b border-gray-200 px-5 py-4 text-base font-semibold text-gray-800">Lotes disponibles</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[560px] text-left text-sm">
+                <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                    <tr>
+                        <th class="px-5 py-3 font-semibold">Código</th>
+                        <th class="px-5 py-3 font-semibold">Caducidad</th>
+                        <th class="px-5 py-3 text-right font-semibold">Cantidad</th>
+                        <th class="px-5 py-3 text-right font-semibold">Costo unitario</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse ($producto->lotes as $lote)
+                        <tr>
+                            <td class="px-5 py-3 font-mono text-gray-800">{{ $lote->codigo_lote }}</td>
+                            <td class="px-5 py-3 {{ $lote->fecha_caducidad?->lt(today()) ? 'font-semibold text-red-600' : 'text-gray-600' }}">
+                                {{ $lote->fecha_caducidad?->format('d/m/Y') ?? 'Sin caducidad' }}
+                                @if ($lote->fecha_caducidad?->lt(today()))
+                                    (vencido; no vendible)
+                                @endif
+                            </td>
+                            <td class="px-5 py-3 text-right text-gray-800">{{ $lote->cantidad_disponible }}</td>
+                            <td class="px-5 py-3 text-right text-gray-600">$ {{ number_format((float) $lote->costo_compra, 2) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-5 py-8 text-center text-gray-500">No hay lotes con existencias.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </section>
 
     {{-- Filtros del kárdex --}}

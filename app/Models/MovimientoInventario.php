@@ -16,7 +16,9 @@ class MovimientoInventario extends Model
     protected $table = 'movimientos_inventario';
 
     public const ENTRADA = 'entrada';
+
     public const SALIDA = 'salida';
+
     public const AJUSTE = 'ajuste';
 
     /**
@@ -32,7 +34,9 @@ class MovimientoInventario extends Model
 
     protected $fillable = [
         'producto_id',
+        'lote_producto_id',
         'usuario_id',
+        'venta_id',
         'tipo',
         'cantidad',
         'stock_anterior',
@@ -54,6 +58,30 @@ class MovimientoInventario extends Model
     public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    /**
+     * Lote afectado por el movimiento, cuando existe.
+     *
+     * @return BelongsTo<LoteProducto, $this>
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
+    public function lote(): BelongsTo
+    {
+        return $this->belongsTo(LoteProducto::class, 'lote_producto_id');
+    }
+
+    /**
+     * Venta que originó el movimiento de salida, cuando existe.
+     *
+     * @return BelongsTo<Venta, $this>
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
+    public function venta(): BelongsTo
+    {
+        return $this->belongsTo(Venta::class);
     }
 
     /**

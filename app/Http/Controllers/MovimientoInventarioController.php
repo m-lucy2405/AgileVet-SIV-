@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
+use App\Models\User;
 use App\Services\InventarioService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,6 +61,9 @@ class MovimientoInventarioController extends Controller
             // En un ajuste se escribe el stock contado, que sí puede ser 0
             'cantidad' => ['required', 'integer', $tipo === MovimientoInventario::AJUSTE ? 'min:0' : 'min:1', 'max:1000000'],
             'motivo' => ['required', 'string', 'max:255'],
+            'codigo_lote' => ['nullable', 'string', 'max:100'],
+            'fecha_caducidad' => ['nullable', 'date', 'after_or_equal:today'],
+            'costo_compra' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
         ], [
             'tipo.required' => 'Elige el tipo de movimiento.',
             'cantidad.required' => 'Escribe la cantidad.',
@@ -70,12 +74,18 @@ class MovimientoInventarioController extends Controller
             'motivo.required' => 'Escribe el motivo del movimiento.',
         ]);
 
+        $usuario = $request->user();
+        abort_unless($usuario instanceof User, 403);
+
         $movimiento = $inventario->registrar(
             $producto,
             $validated['tipo'],
             (int) $validated['cantidad'],
             $validated['motivo'],
-            $request->user(),
+            $usuario,
+            $validated['codigo_lote'] ?? null,
+            $validated['fecha_caducidad'] ?? null,
+            $validated['costo_compra'] ?? null,
         );
 
         return redirect()

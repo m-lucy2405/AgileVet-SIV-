@@ -42,7 +42,10 @@ class ProductoController extends Controller
         $estado = $filtros['estado'] ?? 'activos';
 
         $productos = Producto::query()
-            ->with('categoria')
+            ->with([
+                'categoria',
+                'lotes' => fn ($query) => $query->where('cantidad_disponible', '>', 0),
+            ])
             ->when($buscar !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('nombre', 'like', "%{$buscar}%")
                 ->orWhere('codigo', 'like', "%{$buscar}%")))
@@ -106,7 +109,10 @@ class ProductoController extends Controller
         ];
 
         return view('inventario.show', [
-            'producto' => $producto->load('categoria'),
+            'producto' => $producto->load([
+                'categoria',
+                'lotes' => fn ($query) => $query->where('cantidad_disponible', '>', 0),
+            ]),
             'movimientos' => $movimientos->paginate(20)->withQueryString(),
             'totales' => $totales,
             'filtros' => $filtros,
@@ -133,12 +139,15 @@ class ProductoController extends Controller
         $validated = $request->validate([
             ...$this->reglas(),
             'stock_inicial' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'codigo_lote_inicial' => ['nullable', 'string', 'max:100'],
         ], $this->mensajes());
 
         $stockInicial = (int) ($validated['stock_inicial'] ?? 0);
+        $codigoLoteInicial = $validated['codigo_lote_inicial'] ?? null;
         unset($validated['stock_inicial']);
+        unset($validated['codigo_lote_inicial']);
 
-        DB::transaction(function () use ($validated, $stockInicial, $inventario, $request): void {
+        DB::transaction(function () use ($validated, $stockInicial, $codigoLoteInicial, $inventario, $request): void {
             $producto = Producto::query()->create([
                 ...$validated,
                 'stock' => 0,
@@ -151,7 +160,10 @@ class ProductoController extends Controller
                     MovimientoInventario::ENTRADA,
                     $stockInicial,
                     'Inventario inicial',
-                    $request->user()
+                    $request->user(),
+                    $codigoLoteInicial ?? 'INICIAL-'.$producto->codigo,
+                    $producto->fecha_vencimiento?->toDateString(),
+                    $producto->precio_compra,
                 );
             }
         });
