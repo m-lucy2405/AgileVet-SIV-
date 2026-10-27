@@ -30,7 +30,10 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['producto_id', 'codigo_lote']);
-            $table->index(['producto_id', 'fecha_caducidad', 'cantidad_disponible']);
+            $table->index(
+                ['producto_id', 'fecha_caducidad', 'cantidad_disponible'],
+                'lotes_producto_producto_caducidad_stock_idx'
+            );
         });
 
         DB::table('productos')
