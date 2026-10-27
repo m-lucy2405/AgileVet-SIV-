@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Representa una mascota registrada en la clínica veterinaria.
+ *
+ * @package App\Models
+ * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+ */
 class Mascota extends Model
 {
     use HasFactory;
@@ -38,6 +44,10 @@ class Mascota extends Model
 
     /**
      * Una mascota pertenece a un cliente.
+     *
+     * @package App\Models
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function cliente(): BelongsTo
     {
@@ -49,6 +59,10 @@ class Mascota extends Model
 
     /**
      * Una mascota puede tener muchas citas.
+     *
+     * @package App\Models
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function citas(): HasMany
     {
@@ -60,6 +74,10 @@ class Mascota extends Model
 
     /**
      * Una mascota tiene un expediente clínico.
+     *
+     * @package App\Models
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function expediente(): HasOne
     {
@@ -69,4 +87,3 @@ class Mascota extends Model
         );
     }
 }
-
