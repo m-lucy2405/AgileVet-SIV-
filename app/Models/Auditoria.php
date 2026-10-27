@@ -53,6 +53,8 @@ class Auditoria extends Model
         'desparasitaciones' => 'Desparasitaciones',
         'clientes' => 'Clientes',
         'mascotas' => 'Mascotas',
+        'categorias_productos' => 'Categorías de productos',
+        'productos' => 'Productos',
     ];
 
     protected $fillable = [

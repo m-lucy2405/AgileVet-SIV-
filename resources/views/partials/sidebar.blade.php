@@ -11,7 +11,7 @@
             ['texto' => 'Expedientes', 'url' => route('expedientes.index'), 'ruta' => 'expedientes*'],
         ],
         'Negocio' => [
-            ['texto' => 'Inventario', 'url' => '#', 'ruta' => 'inventario*'],
+            ['texto' => 'Inventario', 'url' => route('productos.index'), 'ruta' => 'inventario*'],
             ['texto' => 'Ventas', 'url' => '#', 'ruta' => 'ventas*'],
             ['texto' => 'Reportes', 'url' => route('reportes.index'), 'ruta' => 'reportes*'],
         ],
