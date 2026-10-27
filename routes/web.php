@@ -1,6 +1,6 @@
 
 <?php
-
+use App\Http\Controllers\MascotaController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
@@ -32,6 +32,14 @@ Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
     Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
+    
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
+    Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.edit');
+    Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
+    Route::get('/mascotas/{mascota}/editar', [MascotaController::class, 'edit'])->name('mascotas.edit');
+    Route::put('/mascotas/{mascota}', [MascotaController::class, 'update'])->name('mascotas.update');
+
     Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
     Route::get('/citas/calendario/eventos', [CitaController::class, 'calendarEvents'])
         ->name('citas.calendario.eventos');
