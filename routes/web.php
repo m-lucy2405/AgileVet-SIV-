@@ -6,6 +6,7 @@ use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VacunacionController;
 use Illuminate\Support\Facades\Route;
@@ -72,6 +73,13 @@ Route::middleware('auth')->group(function () {
         ->name('desparasitaciones.create');
     Route::post('/expedientes/{mascota}/desparasitaciones', [DesparasitacionController::class, 'store'])
         ->name('desparasitaciones.store');
+
+    // Reportes (el controlador verifica qué rol puede ver cada uno)
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::get('/reportes/citas', [ReporteController::class, 'citas'])->name('reportes.citas');
+    Route::get('/reportes/consultas', [ReporteController::class, 'consultas'])->name('reportes.consultas');
+    Route::get('/reportes/diagnosticos', [ReporteController::class, 'diagnosticos'])->name('reportes.diagnosticos');
+    Route::get('/reportes/dosis', [ReporteController::class, 'dosis'])->name('reportes.dosis');
 
     // La administración de cuentas, roles y auditoría está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
