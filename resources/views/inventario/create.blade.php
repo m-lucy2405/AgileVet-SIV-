@@ -36,6 +36,18 @@
             @enderror
         </div>
 
+        <div class="grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
+            <div>
+                <label for="codigo_lote_inicial" class="etiqueta">Código del lote inicial</label>
+                <input id="codigo_lote_inicial" name="codigo_lote_inicial" type="text" maxlength="100"
+                    class="campo" value="{{ old('codigo_lote_inicial') }}">
+                <p class="mt-1 text-xs text-gray-500">Si se deja vacío, el sistema genera un código.</p>
+                @error('codigo_lote_inicial')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         <div class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <a href="{{ route('productos.index') }}" class="btn-secundario">Cancelar</a>
             <button type="submit" class="btn-primario">Guardar producto</button>

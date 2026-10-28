@@ -92,9 +92,12 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($productos as $producto)
                         @php
-                            $porVencer = $producto->fecha_vencimiento
-                                && ! $producto->estaVencido()
-                                && $producto->fecha_vencimiento->lte(today()->addDays(\App\Http\Controllers\ProductoController::DIAS_POR_VENCER));
+                            $loteConCaducidad = $producto->lotes->first(fn ($lote) => $lote->fecha_caducidad !== null);
+                            $fechaCaducidad = $loteConCaducidad?->fecha_caducidad;
+                            $estaVencido = $fechaCaducidad?->lt(today()) ?? false;
+                            $porVencer = $fechaCaducidad !== null
+                                && ! $estaVencido
+                                && $fechaCaducidad->lte(today()->addDays(\App\Http\Controllers\ProductoController::DIAS_POR_VENCER));
                         @endphp
                         <tr class="transition hover:bg-gray-50 {{ $producto->activo ? '' : 'opacity-60' }}">
                             <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ $producto->codigo }}</td>
@@ -118,14 +121,14 @@
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-gray-800">$ {{ number_format($producto->precio_venta, 2) }}</td>
                             <td class="whitespace-nowrap px-4 py-3">
-                                @if (! $producto->fecha_vencimiento)
+                                @if (! $fechaCaducidad)
                                     <span class="text-gray-500">—</span>
-                                @elseif ($producto->estaVencido())
-                                    <span class="font-semibold text-red-600">{{ $producto->fecha_vencimiento->format('d/m/Y') }} (vencido)</span>
+                                @elseif ($estaVencido)
+                                    <span class="font-semibold text-red-600">{{ $fechaCaducidad->format('d/m/Y') }} (vencido)</span>
                                 @elseif ($porVencer)
-                                    <span class="font-semibold text-amber-300">{{ $producto->fecha_vencimiento->format('d/m/Y') }} (por vencer)</span>
+                                    <span class="font-semibold text-amber-300">{{ $fechaCaducidad->format('d/m/Y') }} (por vencer)</span>
                                 @else
-                                    <span class="text-gray-600">{{ $producto->fecha_vencimiento->format('d/m/Y') }}</span>
+                                    <span class="text-gray-600">{{ $fechaCaducidad->format('d/m/Y') }}</span>
                                 @endif
                             </td>
                             @if ($esAdministrador)

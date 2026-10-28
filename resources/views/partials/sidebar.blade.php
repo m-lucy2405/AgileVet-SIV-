@@ -1,5 +1,6 @@
 @php
     $esAdministrador = auth()->user()?->role?->nombre === 'Administrador';
+    $puedeVender = in_array(auth()->user()?->role?->nombre, ['Administrador', 'Recepcionista'], true);
 
     $secciones = [
         'Principal' => [
@@ -12,10 +13,13 @@
         ],
         'Negocio' => [
             ['texto' => 'Inventario', 'url' => route('productos.index'), 'ruta' => 'inventario*'],
-            ['texto' => 'Ventas', 'url' => '#', 'ruta' => 'ventas*'],
             ['texto' => 'Reportes', 'url' => route('reportes.index'), 'ruta' => 'reportes*'],
         ],
     ];
+
+    if ($puedeVender) {
+        $secciones['Negocio'][] = ['texto' => 'Ventas', 'url' => route('ventas.index'), 'ruta' => 'ventas*'];
+    }
 
     if ($esAdministrador) {
         $secciones['Administración'] = [

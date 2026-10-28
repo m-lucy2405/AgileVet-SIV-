@@ -20,9 +20,13 @@ class Auditoria extends Model
      * Acciones que se registran.
      */
     public const CREAR = 'crear';
+
     public const MODIFICAR = 'modificar';
+
     public const ELIMINAR = 'eliminar';
+
     public const INICIO_SESION = 'inicio_sesion';
+
     public const CIERRE_SESION = 'cierre_sesion';
 
     /**
@@ -55,6 +59,10 @@ class Auditoria extends Model
         'mascotas' => 'Mascotas',
         'categorias_productos' => 'Categorías de productos',
         'productos' => 'Productos',
+        'lotes_producto' => 'Lotes de inventario',
+        'movimientos_inventario' => 'Movimientos de inventario',
+        'ventas' => 'Ventas',
+        'detalle_ventas' => 'Detalle de ventas',
     ];
 
     protected $fillable = [

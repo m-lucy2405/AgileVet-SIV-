@@ -297,9 +297,9 @@ class InventarioTest extends TestCase
      */
     private function createProducto(array $datos = []): Producto
     {
-        return Producto::query()->create([
+        $producto = Producto::query()->create([
             'categoria_id' => $datos['categoria_id'] ?? $this->createCategoria()->id,
-            'codigo' => 'MED-' . fake()->unique()->numerify('####'),
+            'codigo' => 'MED-'.fake()->unique()->numerify('####'),
             'nombre' => 'Producto de prueba',
             'unidad' => 'unidad',
             'precio_compra' => 2,
@@ -309,6 +309,17 @@ class InventarioTest extends TestCase
             'activo' => true,
             ...$datos,
         ]);
+
+        if ($producto->stock > 0) {
+            $producto->lotes()->create([
+                'codigo_lote' => 'TEST-'.$producto->id,
+                'fecha_caducidad' => $producto->fecha_vencimiento?->toDateString(),
+                'cantidad_disponible' => $producto->stock,
+                'costo_compra' => $producto->precio_compra,
+            ]);
+        }
+
+        return $producto;
     }
 
     /**

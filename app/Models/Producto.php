@@ -61,6 +61,21 @@ class Producto extends Model
     }
 
     /**
+     * Lotes asociados al producto, ordenados por fecha de caducidad.
+     *
+     * @return HasMany<LoteProducto, $this>
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
+    public function lotes(): HasMany
+    {
+        return $this->hasMany(LoteProducto::class)
+            ->orderByRaw('fecha_caducidad IS NULL')
+            ->orderBy('fecha_caducidad')
+            ->orderBy('id');
+    }
+
+    /**
      * Solo productos activos.
      */
     public function scopeActivos(Builder $query): void
@@ -81,8 +96,10 @@ class Producto extends Model
      */
     public function scopePorVencer(Builder $query, int $dias = 30): void
     {
-        $query->whereNotNull('fecha_vencimiento')
-            ->whereDate('fecha_vencimiento', '<=', today()->addDays($dias));
+        $query->whereHas('lotes', fn (Builder $query): Builder => $query
+            ->where('cantidad_disponible', '>', 0)
+            ->whereNotNull('fecha_caducidad')
+            ->whereDate('fecha_caducidad', '<=', today()->addDays($dias)));
     }
 
     /**
@@ -94,10 +111,27 @@ class Producto extends Model
     }
 
     /**
+     * Indica si el producto tiene menos stock disponible que el solicitado.
+     *
+     * @param  int  $cantidad  Cantidad solicitada.
+     * @return bool Verdadero si el stock total es insuficiente.
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
+    public function tieneStockInsuficiente(int $cantidad): bool
+    {
+        return $this->stock < $cantidad;
+    }
+
+    /**
      * Indica si el producto ya venció.
      */
     public function estaVencido(): bool
     {
-        return $this->fecha_vencimiento !== null && $this->fecha_vencimiento->lt(today());
+        return $this->lotes()
+            ->where('cantidad_disponible', '>', 0)
+            ->whereNotNull('fecha_caducidad')
+            ->whereDate('fecha_caducidad', '<', today())
+            ->exists();
     }
 }

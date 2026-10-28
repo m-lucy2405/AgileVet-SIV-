@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -42,6 +43,25 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'rol_id');
     }
 
+    /**
+     * Ventas procesadas por el usuario.
+     *
+     * @return HasMany<Venta, $this>
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class, 'usuario_id');
+    }
+
+    /**
+     * Obtiene el nombre del campo de contraseña utilizado para autenticación.
+     *
+     * @return string Nombre del atributo de contraseña.
+     *
+     * @author Miguel Alfredo Ayala Rodriguez <desarrollo@agilevet.com>
+     */
     public function getAuthPasswordName(): string
     {
         return 'password_hash';
