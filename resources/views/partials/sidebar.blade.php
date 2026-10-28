@@ -7,7 +7,7 @@
             ['texto' => 'Citas', 'url' => route('citas.index'), 'ruta' => 'citas*'],
         ],
         'Atención' => [
-            ['texto' => 'Clientes y mascotas', 'url' => route('clientes.registro'), 'ruta' => 'clientes*'],
+            ['texto' => 'Clientes y mascotas', 'url' => route('clientes.index'), 'ruta' => 'clientes*'],
             ['texto' => 'Expedientes', 'url' => route('expedientes.index'), 'ruta' => 'expedientes*'],
         ],
         'Negocio' => [
