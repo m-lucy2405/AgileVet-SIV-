@@ -28,6 +28,16 @@ class AuthTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_login_page_uses_https_urls_behind_a_railway_proxy(): void
+    {
+        $response = $this->withHeader('X-Forwarded-Proto', 'https')
+            ->get('/login');
+
+        $response->assertOk();
+        $response->assertSee('href="https://localhost:8000/build/assets/', false);
+        $response->assertSee('action="https://localhost:8000/login"', false);
+    }
+
     public function test_login_rejects_an_incorrect_password(): void
     {
         $this->seed();
