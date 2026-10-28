@@ -3,6 +3,9 @@
 @section('titulo', 'Editar cliente')
 
 @section('contenido')
+    <div class="mx-auto mb-4 max-w-3xl">
+        <a href="{{ route('clientes.show', $cliente) }}" class="btn-volver">&larr; Volver a la ficha</a>
+    </div>
     <form method="POST" action="{{ route('clientes.update', $cliente) }}"
         class="mx-auto max-w-3xl space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         @csrf

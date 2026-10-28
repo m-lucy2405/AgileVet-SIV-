@@ -3,6 +3,9 @@
 @section('titulo', 'Editar mascota')
 
 @section('contenido')
+    <div class="mx-auto mb-4 max-w-3xl">
+        <a href="{{ route('clientes.show', $mascota->cliente_id) }}" class="btn-volver">&larr; Volver a la ficha</a>
+    </div>
     <form method="POST" action="{{ route('mascotas.update', $mascota) }}"
         class="mx-auto max-w-3xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         @csrf

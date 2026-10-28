@@ -4,7 +4,7 @@
 
 @section('contenido')
     <div class="mx-auto max-w-5xl space-y-6">
-        <a href="{{ route('clientes.index') }}" class="text-sm text-gray-500 hover:underline">← Volver a clientes</a>
+        <a href="{{ route('clientes.index') }}" class="btn-volver">&larr; Volver a clientes</a>
 
         @if (session('success'))
             <div class="rounded-lg border border-[#4ade80] bg-[#1f4d3a] px-4 py-3 text-sm font-medium text-[#dcfce7]">
