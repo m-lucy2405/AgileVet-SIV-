@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,8 +31,10 @@ class AuthTest extends TestCase
 
     public function test_login_page_uses_https_urls_behind_a_railway_proxy(): void
     {
-        $response = $this->withHeader('X-Forwarded-Proto', 'https')
-            ->get('/login');
+        $this->app['env'] = 'production';
+        (new AppServiceProvider($this->app))->boot();
+
+        $response = $this->get('/login');
 
         $response->assertOk();
         $response->assertSee('href="https://localhost:8000/build/assets/', false);
