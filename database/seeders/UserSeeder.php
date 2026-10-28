@@ -11,6 +11,12 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new RuntimeException(
+                'Demo accounts are disabled in production. Use php artisan agilevet:create-admin instead.',
+            );
+        }
+
         $users = [
             [
                 'nombre' => 'Administrador AgileVet',
