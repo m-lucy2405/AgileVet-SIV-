@@ -7,7 +7,7 @@
      
       $especies = ['Canino', 'Felino', 'Ave', 'Bovino', 'Porcino'];
 
-                $razasPorEspecie = [
+             $razasPorEspecie = [
             'Canino' => ['Mestizo', 'Labrador', 'Pastor Alemán', 'Chihuahua', 'Poodle'],
             'Felino' => ['Mestizo', 'Siamés', 'Persa'],
             'Ave' => ['Gallina criolla', 'Perico australiano'],
@@ -20,6 +20,7 @@
 
 
      <div class="mx-auto max-w-5xl">
+        <a href="{{ route('clientes.index') }}" class="btn-volver mb-4">&larr; Volver a clientes</a>
         <p class="mb-6 text-sm text-gray-600">
             Registra al propietario y a su mascota en un solo paso.
             Los campos con <span class="text-red-500">*</span> son obligatorios.
