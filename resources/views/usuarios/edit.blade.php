@@ -4,7 +4,7 @@
 
 @section('contenido')
     <div class="mx-auto max-w-3xl">
-        <a href="{{ route('usuarios.index') }}" class="mb-4 inline-block text-sm text-primario-700 hover:underline">
+        <a href="{{ route('usuarios.index') }}" class="mb-4 btn-volver">
             &larr; Volver a usuarios
         </a>
 

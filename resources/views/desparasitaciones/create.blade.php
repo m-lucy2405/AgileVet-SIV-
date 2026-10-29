@@ -3,7 +3,7 @@
 @section('titulo', 'Registrar desparasitación')
 
 @section('contenido')
-    <a href="{{ route('expedientes.show', $mascota) }}" class="mb-4 inline-block text-sm text-primario-300 hover:underline">
+    <a href="{{ route('expedientes.show', $mascota) }}" class="mb-4 btn-volver">
         &larr; Volver al expediente
     </a>
 

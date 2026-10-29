@@ -8,7 +8,7 @@
     @endphp
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('expedientes.index') }}" class="text-sm text-primario-300 hover:underline">
+        <a href="{{ route('expedientes.index') }}" class="btn-volver">
             &larr; Volver a expedientes
         </a>
 

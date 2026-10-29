@@ -20,7 +20,7 @@
     </style>
 
     <div class="no-imprimir mb-5 flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('ventas.index') }}" class="text-sm text-primario-300 hover:underline">&larr; Volver a ventas</a>
+        <a href="{{ route('ventas.index') }}" class="btn-volver">&larr; Volver a ventas</a>
         <button type="button" onclick="window.print()" class="btn-secundario">Imprimir comprobante</button>
     </div>
 
