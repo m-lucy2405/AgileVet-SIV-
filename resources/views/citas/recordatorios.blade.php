@@ -19,7 +19,7 @@
                 </p>
             </div>
 
-            <span class="rounded-full bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
+            <span class="rounded-full bg-primario-500/15 px-3 py-1 text-sm font-medium text-primario-300 ring-1 ring-primario-500/30">
                 {{ count($recordatorios) }} {{ count($recordatorios) === 1 ? 'cita' : 'citas' }}
             </span>
         </div>

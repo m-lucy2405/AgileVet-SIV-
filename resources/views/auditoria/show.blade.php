@@ -21,7 +21,7 @@
     @endphp
 
     <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('auditoria.index') }}"
-        class="mb-4 inline-block text-sm text-primario-300 hover:underline">
+        class="mb-4 btn-volver">
         &larr; Volver a la auditoría
     </a>
 

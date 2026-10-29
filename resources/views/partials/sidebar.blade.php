@@ -35,7 +35,7 @@
     {{-- Logo y nombre --}}
     <div class="flex h-16 items-center justify-between border-b border-white/10 px-5">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-acento-500 font-bold text-white">LM</span>
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0d1528] font-bold text-primario-300 ring-1 ring-primario-500/40">LM</span>
             <span class="leading-tight">
                 <span class="block text-sm font-semibold">Agro-Veterinaria</span>
                 <span class="block text-xs text-primario-200">La Mascota</span>

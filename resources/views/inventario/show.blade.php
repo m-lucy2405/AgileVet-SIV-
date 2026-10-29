@@ -4,7 +4,7 @@
 
 @section('contenido')
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('productos.index') }}" class="text-sm text-primario-300 hover:underline">&larr; Volver al inventario</a>
+        <a href="{{ route('productos.index') }}" class="btn-volver">&larr; Volver al inventario</a>
 
         @if ($esAdministrador)
             <div class="flex gap-3">

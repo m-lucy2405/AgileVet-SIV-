@@ -7,6 +7,6 @@
     ];
 @endphp
 
-<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ $colores[$auditoria->accion] ?? 'bg-gray-100 text-gray-600' }}">
+<span class="inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium {{ $colores[$auditoria->accion] ?? 'bg-gray-100 text-gray-600' }}">
     {{ $auditoria->nombreAccion() }}
 </span>

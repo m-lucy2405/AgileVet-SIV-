@@ -249,9 +249,8 @@ body {
     overflow: hidden;
 }
 
-/* Filas de horas más altas para que quepan dos líneas */
 #calendario-citas .fc-timegrid-slot {
-    height: 2.25rem;
+    height: 3rem;
 }
 
 /* Ventana "+N más" del calendario: fondo sólido para que no se vean las citas de atrás */

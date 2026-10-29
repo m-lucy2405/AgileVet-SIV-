@@ -3,7 +3,7 @@
 @section('titulo', 'Editar producto')
 
 @section('contenido')
-    <a href="{{ route('productos.index') }}" class="mb-4 inline-block text-sm text-primario-300 hover:underline">
+    <a href="{{ route('productos.index') }}" class="mb-4 btn-volver">
         &larr; Volver al inventario
     </a>
 

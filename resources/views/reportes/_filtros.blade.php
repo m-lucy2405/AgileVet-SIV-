@@ -10,7 +10,7 @@
 </style>
 
 <div class="no-imprimir mb-4 flex flex-wrap items-center justify-between gap-3">
-    <a href="{{ route('reportes.index') }}" class="text-sm text-primario-300 hover:underline">&larr; Volver a reportes</a>
+    <a href="{{ route('reportes.index') }}" class="btn-volver">&larr; Volver a reportes</a>
     <button type="button" onclick="window.print()" class="btn-secundario">Imprimir o guardar como PDF</button>
 </div>
 

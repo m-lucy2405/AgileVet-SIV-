@@ -4,7 +4,7 @@
 
 @section('contenido')
     <div class="mb-5 flex items-center justify-between gap-3">
-        <a href="{{ route('ventas.index') }}" class="text-sm text-primario-300 hover:underline">&larr; Volver a ventas</a>
+        <a href="{{ route('ventas.index') }}" class="btn-volver">&larr; Volver a ventas</a>
     </div>
 
     @if ($errors->any())
