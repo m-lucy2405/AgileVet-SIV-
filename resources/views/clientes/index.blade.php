@@ -36,9 +36,11 @@
                 </table>
             </div>
 
-            <div class="border-t border-gray-100 px-5 py-3">
-                {{ $clientes->links() }}
-            </div>
+            @if ($clientes->hasPages())
+                <div class="border-t border-gray-100 px-5 py-3">
+                    {{ $clientes->links() }}
+                </div>
+            @endif
         @else
             <p class="px-5 py-12 text-center text-sm text-gray-500">
                 Todavía no hay clientes registrados.
