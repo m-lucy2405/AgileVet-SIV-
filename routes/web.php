@@ -1,13 +1,14 @@
-
 <?php
-use App\Http\Controllers\MascotaController;
+
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConsultaController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\MascotaController;
 use App\Http\Controllers\MovimientoInventarioController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
@@ -30,10 +31,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    // Inicio con los indicadores del día
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
     Route::view('/clientes/registro', 'clientes.registro')->name('clientes.registro');
     Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
-    
+
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
     Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.edit');
