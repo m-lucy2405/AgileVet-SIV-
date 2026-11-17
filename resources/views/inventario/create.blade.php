@@ -26,27 +26,45 @@
 
         @include('inventario._formulario')
 
-        <div class="border-t border-gray-100 pt-4 sm:max-w-xs">
-            <label for="stock_inicial" class="etiqueta">Stock inicial</label>
-            <input id="stock_inicial" name="stock_inicial" type="number" step="1" min="0" class="campo"
-                value="{{ old('stock_inicial', 0) }}">
-            <p class="mt-1 text-xs text-gray-500">Quedará registrado como la primera entrada del kárdex.</p>
-            @error('stock_inicial')
-                <p class="error-campo">{{ $message }}</p>
-            @enderror
-        </div>
+        {{-- Lote inicial: la fecha de caducidad pertenece al lote, no al producto --}}
+        <fieldset class="border-t border-gray-100 pt-4">
+            <legend class="text-sm font-semibold text-gray-800">Lote inicial (opcional)</legend>
+            <p class="mt-1 text-xs text-gray-500">
+                Si el producto llega con existencias, indícalas aquí. Quedarán como la primera entrada del kárdex.
+                La fecha de caducidad es la que usan las alertas de "por vencer".
+            </p>
 
-        <div class="grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
-            <div>
-                <label for="codigo_lote_inicial" class="etiqueta">Código del lote inicial</label>
-                <input id="codigo_lote_inicial" name="codigo_lote_inicial" type="text" maxlength="100"
-                    class="campo" value="{{ old('codigo_lote_inicial') }}">
-                <p class="mt-1 text-xs text-gray-500">Si se deja vacío, el sistema genera un código.</p>
-                @error('codigo_lote_inicial')
-                    <p class="error-campo">{{ $message }}</p>
-                @enderror
+            <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                <div>
+                    <label for="stock_inicial" class="etiqueta">Stock inicial</label>
+                    <input id="stock_inicial" name="stock_inicial" type="number" step="1" min="0" class="campo"
+                        value="{{ old('stock_inicial', 0) }}">
+                    @error('stock_inicial')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="codigo_lote_inicial" class="etiqueta">Código del lote</label>
+                    <input id="codigo_lote_inicial" name="codigo_lote_inicial" type="text" maxlength="100"
+                        class="campo" value="{{ old('codigo_lote_inicial') }}">
+                    <p class="mt-1 text-xs text-gray-500">Si se deja vacío, el sistema genera uno.</p>
+                    @error('codigo_lote_inicial')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="fecha_caducidad_inicial" class="etiqueta">Fecha de caducidad</label>
+                    <input id="fecha_caducidad_inicial" name="fecha_caducidad_inicial" type="date" class="campo"
+                        min="{{ today()->toDateString() }}" value="{{ old('fecha_caducidad_inicial') }}">
+                    <p class="mt-1 text-xs text-gray-500">Déjala vacía si el producto no caduca.</p>
+                    @error('fecha_caducidad_inicial')
+                        <p class="error-campo">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
-        </div>
+        </fieldset>
 
         <div class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <a href="{{ route('productos.index') }}" class="btn-secundario">Cancelar</a>
