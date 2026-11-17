@@ -91,6 +91,21 @@ class AgendaRefuerzoService
     }
 
     /**
+     * Describe la fecha de la cita en español, por ejemplo: "el sábado 05/12/2026 a las 07:00".
+     */
+    public function describir(Cita $cita): string
+    {
+        $dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+        return sprintf(
+            'el %s %s a las %s',
+            $dias[$cita->fecha_cita->dayOfWeek],
+            $cita->fecha_cita->format('d/m/Y'),
+            $cita->fecha_cita->format('H:i'),
+        );
+    }
+
+    /**
      * Primera hora del día sin choques para el veterinario ni para la mascota.
      */
     private function primeraHoraLibre(CarbonImmutable $dia, int $veterinarioId, int $mascotaId): ?CarbonImmutable
