@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Desparasitación aplicada a una mascota.
+ * El producto se copia del catálogo al registrarla, para que el historial no cambie
+ * aunque después se edite el catálogo.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
@@ -20,10 +22,12 @@ class Desparasitacion extends Model
 
     protected $fillable = [
         'expediente_id',
+        'catalogo_desparasitante_id',
         'producto',
         'dosis',
         'fecha_aplicacion',
         'proxima_aplicacion',
+        'cita_refuerzo_id',
         'observaciones',
     ];
 
@@ -38,5 +42,21 @@ class Desparasitacion extends Model
     public function expediente(): BelongsTo
     {
         return $this->belongsTo(Expediente::class);
+    }
+
+    /**
+     * Desparasitante del catálogo del que se tomó el nombre y el intervalo.
+     */
+    public function catalogo(): BelongsTo
+    {
+        return $this->belongsTo(CatalogoDesparasitante::class, 'catalogo_desparasitante_id');
+    }
+
+    /**
+     * Cita de refuerzo agendada automáticamente.
+     */
+    public function citaRefuerzo(): BelongsTo
+    {
+        return $this->belongsTo(Cita::class, 'cita_refuerzo_id');
     }
 }

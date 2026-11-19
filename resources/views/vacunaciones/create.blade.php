@@ -37,17 +37,36 @@
 
     <p class="mb-4 text-sm text-gray-600">Los campos con <span class="text-red-500">*</span> son obligatorios.</p>
 
-    <form method="POST" action="{{ route('vacunaciones.store', $mascota) }}"
+    <form method="POST" action="{{ route('vacunaciones.store', $mascota) }}" id="form-aplicacion"
         class="space-y-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         @csrf
 
-        <div>
-            <label for="nombre_vacuna" class="etiqueta">Vacuna <span class="text-red-500">*</span></label>
-            <input id="nombre_vacuna" name="nombre_vacuna" type="text" required maxlength="150"
-                placeholder="Ej. Antirrábica" class="campo" value="{{ old('nombre_vacuna') }}">
-            @error('nombre_vacuna')
-                <p class="error-campo">{{ $message }}</p>
-            @enderror
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+                <label for="catalogo_id" class="etiqueta">Vacuna <span class="text-red-500">*</span></label>
+                <select id="catalogo_id" name="catalogo_vacuna_id" class="campo">
+                    @foreach ($catalogo as $vacuna)
+                        <option value="{{ $vacuna->id }}" data-intervalo="{{ $vacuna->intervalo_dias }}"
+                            @selected(old('catalogo_vacuna_id') == $vacuna->id)>
+                            {{ $vacuna->nombre }} (cada {{ $vacuna->intervalo_dias }} días)
+                        </option>
+                    @endforeach
+                    <option value="" @selected(old('catalogo_vacuna_id') === '' || $catalogo->isEmpty())>Otra (escribir el nombre)</option>
+                </select>
+                @error('catalogo_vacuna_id')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div id="bloque-nombre">
+                <label for="nombre_libre" class="etiqueta">Nombre de la vacuna <span class="text-red-500">*</span></label>
+                <input id="nombre_libre" name="nombre_vacuna" type="text" maxlength="150"
+                    placeholder="Ej. Antirrábica" class="campo" value="{{ old('nombre_vacuna') }}">
+                <p class="mt-1 text-xs text-gray-500">Solo si la vacuna no está en la lista.</p>
+                @error('nombre_vacuna')
+                    <p class="error-campo">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -61,14 +80,17 @@
             </div>
 
             <div>
-                <label for="proxima_dosis" class="etiqueta">Próxima dosis</label>
-                <input id="proxima_dosis" name="proxima_dosis" type="date" min="{{ now()->addDay()->toDateString() }}"
+                <label for="proxima" class="etiqueta">Próxima dosis</label>
+                <input id="proxima" name="proxima_dosis" type="date" min="{{ now()->addDay()->toDateString() }}"
                     class="campo" value="{{ old('proxima_dosis') }}">
+                <p id="ayuda-proxima" class="mt-1 text-xs text-gray-500"></p>
                 @error('proxima_dosis')
                     <p class="error-campo">{{ $message }}</p>
                 @enderror
             </div>
         </div>
+
+        @include('vacunaciones._agendar_refuerzo')
 
         <div>
             <label for="observaciones" class="etiqueta">Observaciones</label>
@@ -85,3 +107,7 @@
         </div>
     </form>
 @endsection
+
+@push('scripts')
+    @include('vacunaciones._script_refuerzo')
+@endpush
