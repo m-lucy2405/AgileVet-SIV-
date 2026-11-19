@@ -8,6 +8,7 @@ use App\Http\Controllers\ConsultaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\LoteProductoController;
 use App\Http\Controllers\MascotaController;
 use App\Http\Controllers\MovimientoInventarioController;
 use App\Http\Controllers\ProductoController;
@@ -171,5 +172,10 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/inventario/productos/{producto}/movimientos', [MovimientoInventarioController::class, 'store'])
             ->name('movimientos.store');
+
+        // Inventario: corregir la fecha de caducidad de un lote
+        Route::patch('/inventario/lotes/{lote}/caducidad', [LoteProductoController::class, 'actualizarCaducidad'])
+            ->whereNumber('lote')
+            ->name('lotes.caducidad');
     });
 });

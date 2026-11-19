@@ -1,4 +1,5 @@
-{{-- Campos del producto. Necesita $categorias y, al editar, $producto --}}
+{{-- Campos del producto. Necesita $categorias y, al editar, $producto.
+     La fecha de caducidad no va aquí: cada lote tiene la suya. --}}
 @php $producto = $producto ?? null; @endphp
 
 <div class="grid gap-4 sm:grid-cols-2">
@@ -59,10 +60,11 @@
     </div>
 
     <div>
-        <label for="fecha_vencimiento" class="etiqueta">Fecha de vencimiento</label>
-        <input id="fecha_vencimiento" name="fecha_vencimiento" type="date" class="campo"
-            value="{{ old('fecha_vencimiento', $producto?->fecha_vencimiento?->toDateString()) }}">
-        @error('fecha_vencimiento')
+        <label for="stock_minimo" class="etiqueta">Stock mínimo <span class="text-red-500">*</span></label>
+        <input id="stock_minimo" name="stock_minimo" type="number" step="1" min="0" required
+            class="campo" value="{{ old('stock_minimo', $producto?->stock_minimo ?? 0) }}">
+        <p class="mt-1 text-xs text-gray-500">Al llegar a esta cantidad, el producto se marca como "Stock bajo".</p>
+        @error('stock_minimo')
             <p class="error-campo">{{ $message }}</p>
         @enderror
     </div>
@@ -81,16 +83,6 @@
         <input id="precio_venta" name="precio_venta" type="number" step="0.01" min="0" required
             class="campo" value="{{ old('precio_venta', $producto?->precio_venta) }}">
         @error('precio_venta')
-            <p class="error-campo">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <div>
-        <label for="stock_minimo" class="etiqueta">Stock mínimo <span class="text-red-500">*</span></label>
-        <input id="stock_minimo" name="stock_minimo" type="number" step="1" min="0" required
-            class="campo" value="{{ old('stock_minimo', $producto?->stock_minimo ?? 0) }}">
-        <p class="mt-1 text-xs text-gray-500">Al llegar a esta cantidad, el producto se marca como "Stock bajo".</p>
-        @error('stock_minimo')
             <p class="error-campo">{{ $message }}</p>
         @enderror
     </div>

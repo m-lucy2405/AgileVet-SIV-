@@ -11,11 +11,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
  * Catálogo de productos del inventario: lista con filtros para todos los usuarios;
  * crear, editar, activar y desactivar solo para el administrador (lo controlan las rutas).
+ * La fecha de caducidad pertenece a cada lote, no al producto.
  *
  * @author Equipo de desarrollo AgileVet-SIV
  */
@@ -132,7 +134,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Guarda un producto nuevo; el stock inicial queda como primera entrada del kárdex.
+     * Guarda un producto nuevo; el stock inicial queda como primera entrada del kárdex,
+     * en un lote con su propia fecha de caducidad.
      */
     public function store(Request $request, InventarioService $inventario): RedirectResponse
     {
@@ -140,14 +143,22 @@ class ProductoController extends Controller
             ...$this->reglas(),
             'stock_inicial' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'codigo_lote_inicial' => ['nullable', 'string', 'max:100'],
+            'fecha_caducidad_inicial' => ['nullable', 'date', 'after_or_equal:today'],
         ], $this->mensajes());
 
         $stockInicial = (int) ($validated['stock_inicial'] ?? 0);
         $codigoLoteInicial = $validated['codigo_lote_inicial'] ?? null;
-        unset($validated['stock_inicial']);
-        unset($validated['codigo_lote_inicial']);
+        $fechaCaducidad = $validated['fecha_caducidad_inicial'] ?? null;
+        unset($validated['stock_inicial'], $validated['codigo_lote_inicial'], $validated['fecha_caducidad_inicial']);
 
-        DB::transaction(function () use ($validated, $stockInicial, $codigoLoteInicial, $inventario, $request): void {
+        // Sin existencias no hay lote, así que la fecha no tendría dónde guardarse
+        if ($fechaCaducidad !== null && $stockInicial === 0) {
+            throw ValidationException::withMessages([
+                'fecha_caducidad_inicial' => 'Para registrar la fecha de caducidad, indica también el stock inicial.',
+            ]);
+        }
+
+        DB::transaction(function () use ($validated, $stockInicial, $codigoLoteInicial, $fechaCaducidad, $inventario, $request): void {
             $producto = Producto::query()->create([
                 ...$validated,
                 'stock' => 0,
@@ -162,8 +173,8 @@ class ProductoController extends Controller
                     'Inventario inicial',
                     $request->user(),
                     $codigoLoteInicial ?? 'INICIAL-'.$producto->codigo,
-                    $producto->fecha_vencimiento?->toDateString(),
-                    $producto->precio_compra,
+                    $fechaCaducidad,
+                    (string) $producto->precio_compra,
                 );
             }
         });
@@ -174,12 +185,15 @@ class ProductoController extends Controller
     }
 
     /**
-     * Formulario para editar un producto (sin el stock, que cambia con movimientos).
+     * Formulario para editar un producto (sin el stock, que cambia con movimientos)
+     * y para corregir la fecha de caducidad de sus lotes.
      */
     public function edit(Producto $producto): View
     {
         return view('inventario.edit', [
-            'producto' => $producto,
+            'producto' => $producto->load([
+                'lotes' => fn ($query) => $query->where('cantidad_disponible', '>', 0),
+            ]),
             'categorias' => CategoriaProducto::query()->orderBy('nombre')->get(),
         ]);
     }
@@ -229,7 +243,6 @@ class ProductoController extends Controller
             'precio_compra' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'precio_venta' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'stock_minimo' => ['required', 'integer', 'min:0', 'max:1000000'],
-            'fecha_vencimiento' => ['nullable', 'date'],
         ];
     }
 
@@ -250,6 +263,8 @@ class ProductoController extends Controller
             'precio_venta.min' => 'El precio de venta no puede ser negativo.',
             'stock_minimo.required' => 'Escribe el stock mínimo (puede ser 0).',
             'stock_inicial.min' => 'El stock inicial no puede ser negativo.',
+            'fecha_caducidad_inicial.date' => 'Escribe una fecha de caducidad válida.',
+            'fecha_caducidad_inicial.after_or_equal' => 'No se puede registrar un lote ya vencido.',
         ];
     }
 }
