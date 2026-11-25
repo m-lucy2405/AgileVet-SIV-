@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Cita;
 use App\Models\Consulta;
 use App\Models\Desparasitacion;
+use App\Models\DetalleVenta;
+use App\Models\LoteProducto;
+use App\Models\Producto;
 use App\Models\User;
 use App\Models\Vacunacion;
+use App\Models\Venta;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Reportes de la clínica: citas, consultas por veterinario, diagnósticos
@@ -36,6 +41,18 @@ class ReporteController extends Controller
     private const ROLES_DOSIS = ['Administrador', 'Veterinario', 'Recepcionista'];
 
     /**
+     * Roles que pueden ver los reportes comerciales (ventas e inventario).
+     *
+     * @var array<int, string>
+     */
+    private const ROLES_COMERCIAL = ['Administrador'];
+
+    /**
+     * Días hacia adelante para mostrar lotes por vencer.
+     */
+    private const DIAS_POR_VENCER = 30;
+
+    /**
      * Estados de cita y su nombre legible.
      *
      * @var array<string, string>
@@ -58,6 +75,7 @@ class ReporteController extends Controller
         return view('reportes.index', [
             'puedeVerGestion' => $this->tieneRol($request, self::ROLES_GESTION),
             'puedeVerDosis' => $this->tieneRol($request, self::ROLES_DOSIS),
+            'puedeVerComercial' => $this->tieneRol($request, self::ROLES_COMERCIAL),
         ]);
     }
 
@@ -237,6 +255,140 @@ class ReporteController extends Controller
     }
 
     /**
+     * Reporte de ventas en un rango de fechas: totales, métodos de pago y productos más vendidos.
+     * Con ?formato=csv descarga el detalle de las ventas.
+     *
+     * @param  Request  $request  Petición con el rango de fechas y el formato opcional.
+     * @return View|StreamedResponse Vista del reporte o archivo CSV.
+     */
+    public function ventas(Request $request): View|StreamedResponse
+    {
+        $this->permitir($request, self::ROLES_COMERCIAL);
+        [$desde, $hasta] = $this->rangoFechas($request);
+
+        $ventas = Venta::query()->whereBetween('fecha_venta', [$desde, $hasta]);
+
+        if ($this->pideCsv($request)) {
+            $filas = (clone $ventas)
+                ->with('usuario')
+                ->orderBy('fecha_venta')
+                ->get()
+                ->map(fn (Venta $venta): array => [
+                    $venta->folio,
+                    $venta->fecha_venta->format('d/m/Y H:i'),
+                    $venta->usuario?->nombre ?? 'Usuario eliminado',
+                    Venta::METODOS_PAGO[$venta->metodo_pago] ?? $venta->metodo_pago,
+                    number_format((float) $venta->total, 2, '.', ''),
+                ]);
+
+            return $this->descargarCsv(
+                'reporte-ventas-'.$desde->format('Y-m-d').'-al-'.$hasta->format('Y-m-d').'.csv',
+                ['Folio', 'Fecha', 'Vendedor', 'Método de pago', 'Total'],
+                $filas,
+            );
+        }
+
+        $cantidad = (clone $ventas)->count();
+        $totalVendido = (float) (clone $ventas)->sum('total');
+
+        $porMetodo = (clone $ventas)
+            ->selectRaw('metodo_pago, COUNT(*) as ventas, SUM(total) as total')
+            ->groupBy('metodo_pago')
+            ->get()
+            ->map(fn ($fila): array => [
+                'metodo' => Venta::METODOS_PAGO[$fila->metodo_pago] ?? $fila->metodo_pago,
+                'ventas' => (int) $fila->ventas,
+                'total' => (float) $fila->total,
+            ])
+            ->sortByDesc('total')
+            ->values();
+
+        $masVendidos = DetalleVenta::query()
+            ->whereHas('venta', fn ($query) => $query->whereBetween('fecha_venta', [$desde, $hasta]))
+            ->selectRaw('codigo_producto, nombre_producto, SUM(cantidad) as unidades, SUM(subtotal) as total')
+            ->groupBy('codigo_producto', 'nombre_producto')
+            ->orderByDesc('unidades')
+            ->limit(10)
+            ->get();
+
+        return view('reportes.ventas', [
+            'desde' => $desde,
+            'hasta' => $hasta,
+            'cantidad' => $cantidad,
+            'totalVendido' => $totalVendido,
+            'promedio' => $cantidad > 0 ? $totalVendido / $cantidad : 0,
+            'porMetodo' => $porMetodo,
+            'masVendidos' => $masVendidos,
+        ]);
+    }
+
+    /**
+     * Reporte del inventario actual: existencias, stock bajo y lotes por vencer.
+     * Con ?formato=csv descarga la lista de productos.
+     *
+     * @param  Request  $request  Petición con el formato opcional.
+     * @return View|StreamedResponse Vista del reporte o archivo CSV.
+     */
+    public function inventario(Request $request): View|StreamedResponse
+    {
+        $this->permitir($request, self::ROLES_COMERCIAL);
+
+        $productos = Producto::query()
+            ->activos()
+            ->with('categoria')
+            ->orderBy('nombre')
+            ->get();
+
+        if ($this->pideCsv($request)) {
+            $filas = $productos->map(fn (Producto $producto): array => [
+                $producto->codigo,
+                $producto->nombre,
+                $producto->categoria?->nombre ?? 'Sin categoría',
+                $producto->unidad,
+                $producto->stock,
+                $producto->stock_minimo,
+                number_format((float) $producto->precio_compra, 2, '.', ''),
+                number_format((float) $producto->precio_venta, 2, '.', ''),
+                $producto->tieneStockBajo() ? 'Stock bajo' : 'Normal',
+            ]);
+
+            return $this->descargarCsv(
+                'reporte-inventario-'.today()->format('Y-m-d').'.csv',
+                ['Código', 'Producto', 'Categoría', 'Unidad', 'Existencia', 'Mínimo', 'Precio de compra', 'Precio de venta', 'Estado'],
+                $filas,
+            );
+        }
+
+        $lotesPorVencer = LoteProducto::query()
+            ->with('producto')
+            ->where('cantidad_disponible', '>', 0)
+            ->whereNotNull('fecha_caducidad')
+            ->whereDate('fecha_caducidad', '<=', today()->addDays(self::DIAS_POR_VENCER))
+            ->orderBy('fecha_caducidad')
+            ->get();
+
+        return view('reportes.inventario', [
+            'productos' => $productos,
+            'totalProductos' => $productos->count(),
+            'conStockBajo' => $productos->filter(fn (Producto $producto): bool => $producto->tieneStockBajo())->count(),
+            'valorInventario' => $productos->sum(fn (Producto $producto): float => $producto->stock * (float) $producto->precio_compra),
+            'lotesPorVencer' => $lotesPorVencer,
+            'diasPorVencer' => self::DIAS_POR_VENCER,
+            'hoy' => today(),
+        ]);
+    }
+
+    /**
+     * Indica si la petición pide descargar el reporte en CSV.
+     */
+    private function pideCsv(Request $request): bool
+    {
+        $request->validate(['formato' => ['nullable', Rule::in(['csv'])]]);
+
+        return $request->query('formato') === 'csv';
+    }
+
+    /**
      * Arma una fila del reporte de dosis con los datos de la mascota y del dueño.
      */
     private function filaDosis(string $tipo, string $nombre, $aplicada, $proxima, $expediente): array
@@ -304,5 +456,30 @@ class ReporteController extends Controller
     private function permitir(Request $request, array $roles): void
     {
         abort_unless($this->tieneRol($request, $roles), 403, 'No tienes permiso para ver este reporte.');
+    }
+
+    /**
+     * Genera un archivo CSV que Excel abre con acentos.
+     *
+     * @param  string  $archivo  Nombre del archivo que se descarga.
+     * @param  array<int, string>  $encabezados  Títulos de las columnas.
+     * @param  iterable<int, array<int, mixed>>  $filas  Filas del reporte.
+     * @return StreamedResponse Descarga del archivo.
+     */
+    private function descargarCsv(string $archivo, array $encabezados, iterable $filas): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($encabezados, $filas): void {
+            $salida = fopen('php://output', 'w');
+
+            // Marca UTF-8 para que Excel muestre bien las tildes y la ñ
+            fwrite($salida, "\xEF\xBB\xBF");
+            fputcsv($salida, $encabezados, ',', '"', '');
+
+            foreach ($filas as $fila) {
+                fputcsv($salida, $fila, ',', '"', '');
+            }
+
+            fclose($salida);
+        }, $archivo, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }
