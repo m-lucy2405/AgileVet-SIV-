@@ -44,6 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
     Route::get('/mascotas/{mascota}/editar', [MascotaController::class, 'edit'])->name('mascotas.edit');
     Route::put('/mascotas/{mascota}', [MascotaController::class, 'update'])->name('mascotas.update');
+    Route::get('/clientes/{cliente}/mascotas/crear', [MascotaController::class, 'create'])->name('mascotas.create');
+    Route::post('/clientes/{cliente}/mascotas', [MascotaController::class, 'store'])->name('mascotas.store');
 
     Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
     Route::get('/citas/calendario/eventos', [CitaController::class, 'calendarEvents'])

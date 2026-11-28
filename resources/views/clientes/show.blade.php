@@ -37,7 +37,10 @@
 
         {{-- Mascotas del cliente --}}
         <section>
-            <h2 class="mb-3 text-base font-semibold text-gray-800">Mascotas ({{ $cliente->mascotas->count() }})</h2>
+             <div class="mb-3 flex items-center justify-between gap-3">
+                <h2 class="text-base font-semibold text-gray-800">Mascotas ({{ $cliente->mascotas->count() }})</h2>
+                <a href="{{ route('mascotas.create', $cliente) }}" class="btn-primario">+ Agregar mascota</a>
+            </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 @forelse ($cliente->mascotas as $mascota)
