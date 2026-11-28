@@ -15,6 +15,11 @@
         if ($puedeVerDosis) {
             $reportes[] = ['ruta' => 'reportes.dosis', 'titulo' => 'Próximas dosis', 'descripcion' => 'Vacunas y desparasitaciones por vencer o vencidas, con el teléfono del dueño.'];
         }
+
+        if ($puedeVerComercial) {
+            $reportes[] = ['ruta' => 'reportes.ventas', 'titulo' => 'Ventas', 'descripcion' => 'Total vendido, ventas por método de pago y productos más vendidos.'];
+            $reportes[] = ['ruta' => 'reportes.inventario', 'titulo' => 'Inventario', 'descripcion' => 'Existencias, productos con stock bajo y lotes por vencer.'];
+        }
     @endphp
 
     <p class="mb-6 text-sm text-gray-600">Elige el reporte que quieres consultar.</p>

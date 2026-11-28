@@ -138,6 +138,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/dosis', [ReporteController::class, 'dosis'])
         ->name('reportes.dosis');
 
+    Route::get('/reportes/ventas', [ReporteController::class, 'ventas'])
+        ->name('reportes.ventas');
+
+    Route::get('/reportes/inventario', [ReporteController::class, 'inventario'])
+        ->name('reportes.inventario');
+
     // La administración de cuentas, roles, auditoría e inventario está reservada al Administrador.
     Route::middleware('role:Administrador')->group(function () {
         // Administración de usuarios
